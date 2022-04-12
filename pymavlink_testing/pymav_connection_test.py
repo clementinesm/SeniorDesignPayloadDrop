@@ -1,5 +1,7 @@
 # this is taken from the mavlink tutorial for pymavlink
 
+# 
+
 from pymavlink import mavutil
 from datetime import datetime
 
@@ -9,6 +11,10 @@ the_connection = mavutil.mavlink_connection('udpin:localhost:14551')
 # Wait for the first heartbeat 
 #   This sets the system and component ID of remote system for the link
 the_connection.wait_heartbeat()
+# might want to figure out what to do if the connection fails & keeps looping
+
+
+
 print("Heartbeat from system (system %u component %u)" % (the_connection.target_system, the_connection.target_component))
 
 # likely cannot visualize the output above, so save it to a file.
