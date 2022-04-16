@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+# ^ might need to change this depending on what version of python we need
 # COE 374 - Senior Design - Spring 2022
 # ADP drop team - Bradley, John, Kenneth, Nishcal, Rhea
 
@@ -8,11 +9,11 @@
 
 
 import rospy
-from pymavlink import mavutil
+from pymavlink import mavutil # don't know if we need this at all
 from sensor_msgs.msg import NavSatFix # not sure what this is
 
-from mavros_msgs.msg import WaypointList
-from mavros_msgs.srv import WaypointPush
+from mavros_msgs.msg import WaypointList, Altitude, State
+from mavros_msgs.srv import WaypointPush, WaypointClear, ParamGet, ParamSet
 
 # load functions we have written
 from airdop_functions import calculate_CARP, calc_approach_waypoints
@@ -47,7 +48,7 @@ from airdop_functions import calculate_CARP, calc_approach_waypoints
 # 4. analyze our performance beyond qualitative measures and measuring how far off the payload is from the target
 
 # class that communicates with mavlink
-class ADP_operation(self):
+class flight(self):
     # autoamtically setups up when it is created
     def __init__(self, *args):
         self.global_position = NavSatFix()
@@ -58,24 +59,51 @@ class ADP_operation(self):
 
         # srv
         self.push_waypoints = rospy.ServiceProxy('mavros/mission/push', WaypointPush)
-        # below line is not correct fs
-        self.push_setpoints = rospy.
-
+        #self.push_setpoints = rospy.ServiceProxy('mavros/mission/push')
+        self.clear_waypoints = rospy.ServiceProxy('mavros/mission/clear', WaypointClear)
         # how do we read these?
-        # subscribers
-        self.mission_waypoints = rospy.Subscriber('mavros/mission/waypoints', WaypointList)
-        self.gps_coords = rospy.Subscriber('')
 
+        # subscribers
+        self.altitude_sub = rospy.Subscriber('mavros/altitude', Altitude, self.altitude_callback)
+        self.mission_waypoints_sub = rospy.Subscriber('mavros/mission/waypoints', WaypointList)
+        self.gps_global_sub = rospy.Subscriber('mavros/global_position/global', NavSatFix, global_position_callback)
+        # uses a callback function to continuously update the data/access data from the pixhawk
+        self.mission_waypoints_sub = rospy.Subscriber('mavros/mission/waypoints', WaypointList, self.local_position_callback)
         # want to know waypoints and gps coordinates for now
         # ***would want more 
 
-# do we need to set this to offboard mode? idk how this works
+        # publishers
+        self.attitude_setpoint_pub = 
 
-# should I create and pass a class that continuously updates position?
+    # callback functions that will allow us to access data from the pixhawk
+
+
+
+    # helper function for adp_drop - checks gps_coordinates
+    def drop_reached(self):
+        # given gps coordinates, check if the last waypoint has been met
+
+        # there might be a better way to check if the waypoint/setpoint has been met...we'll see.
+        # might have to set waypoints in a line with setpoints in between them, idk how the aircraft will perform
+        # ^ try to test all of this in the ardupilot system.
+
+    # this function actually drops the payload.
+    def adp_drop(self):
+        # requirements:
+        # communication with pixhawk to obtain data
+        # location/gps coordinates to check if target is met
+        # communication with servo to actuate it.
+
+
+
+
+# do we need to set this to offboard mode? idk how this works
+"""
+# this will run everything; does not need to be used for now.
 def run_adp_system():
 
     # create object (class) to communicate with the mavlink/pixhawk
-    comms = ADP_operation() # this sets up connection to mavlink
+    comms = flight() # this sets up connection to mavlink
 
     # section 1: wait for gps coordinates from target team
     target_found = False
@@ -117,3 +145,4 @@ def run_adp_system():
 
         # shut down the connection we have with the mavlink
         rospy.sleep() # check if this is how to do it
+"""
