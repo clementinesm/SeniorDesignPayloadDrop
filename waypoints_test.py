@@ -31,12 +31,15 @@ def test_waypoints(target_coords, v_wind, uav_coords):
     next_coords = [adp.convert_vector_to_coords(wp, target_coords) for wp in next_points]
     next_coords = np.array(next_coords)
 
-    # Format waypoints
     """
+    File Format:
+    ----------
     QGC WPL <VERSION>
     <INDEX> <CURRENT WP> <COORD FRAME> <COMMAND> <PARAM1> <PARAM2> <PARAM3> <PARAM4> <PARAM5/X/LATITUDE> <PARAM6/Y/LONGITUDE> <PARAM7/Z/ALTITUDE> <AUTOCONTINUE>
+    ----------
     """
 
+    # Write to file
     with open("payload.waypoints", "w+") as ofile:
         ofile.write('QGC WPL 110\n')
         alt_ft = ALT*3.28084
@@ -58,7 +61,7 @@ def test_waypoints(target_coords, v_wind, uav_coords):
     ax.scatter(uav_coords[1], uav_coords[0], s=10, c='gold')
     ax.text(uav_coords[1]-5*EPS, uav_coords[0]+EPS, 'UAV', size=FONTSIZE, color='white')
 
-    ax.scatter(waypoint_coords[:,1], waypoint_coords[:,0], s=10, c='lime')
+    # ax.scatter(waypoint_coords[:,1], waypoint_coords[:,0], s=10, c='lime')
     ax.scatter(next_coords[:,1], next_coords[:,0], s=10, c='cyan')
 
     wind_coords = [30.3254, -97.6]

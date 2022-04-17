@@ -1,13 +1,29 @@
 import numpy as np
 from numpy import sin, cos, arctan2, arcsin, ceil
 from numpy.linalg import norm
+from pymavlink import mavutil, mavwp
+
 from airdrop_constants import *
 
 # Functions
-def convert_coords_to_vector(coord, coord_ref):
+def convert_coord_to_vector(coord, coord_ref):
     """
+    convert_coord_to_vector(coord, coord_ref)\n
     Convert `coord` to xy vector with origin `coord_ref` (unit meters)
+
+    Parameters
+    ----------
+        xy:array-like
+            xy vector of point (m/s). Shape must be (2,)
+        coord_ref:array-like 
+            (lat, lon) of origin. Shape must be (2,)
+
+    Returns
+    ----------    
+        coords:array-like       
+            (lat, lon) of converted vector. Shape=(2,)
     """
+
     lat_0 = coord_ref[0]
     lon_0 = coord_ref[1]
     lat_1 = coord[0]
@@ -16,10 +32,24 @@ def convert_coords_to_vector(coord, coord_ref):
     y = (lat_1 - lat_0)*R_EARTH*PI/180
     return np.array([x,y])
 
-def convert_vector_to_coords(xy, coord_ref):
+def convert_vector_to_coord(xy, coord_ref):
     """
+    convert_vector_to_coord(xy, coord_ref)\n
     Convert `xy` vector with origin `coord_ref` to (lat, lon)
+
+    Parameters
+    ----------
+        xy:array-like
+            xy vector of point (m/s). Shape must be (2,)
+        coord_ref:array-like 
+            (lat, lon) of origin. Shape must be (2,)
+
+    Returns
+    ----------    
+        coord:array-like       
+            (lat, lon) of converted vector. Shape=(2,)
     """
+
     lat_0 = coord_ref[0]
     lon_0 = coord_ref[1]
     lat_1 = lat_0 + (xy[1]/R_EARTH)*(180 / PI)
@@ -32,14 +62,17 @@ def caclulate_CARP(v_wind, approach_angle):
     caclulate_CARP(v_wind, approach_angle)\n
     Calculate optimal release point for payload drop.
 
-    ## Parameters:\n
+    Parameters
+    ----------
         v_wind:array-like
-            Wind velocity (m/s). Dim must be (3,)
+            Wind velocity (m/s). Shape must be (3,)
         approach_angle:float 
             Heading angle from which UAV will approach target, measured CCW from x-axis (rad)
-    ## Returns:\n    
+
+    Returns
+    ----------    
         carp_xy:array-like       
-            XY-location of CARP relative to target (m).
+            XY-location of CARP relative to target (m). Shape=(2,)
     """
     theta = approach_angle
     e_approach = np.array([cos(theta), sin(theta)])
@@ -86,9 +119,23 @@ def caclulate_CARP(v_wind, approach_angle):
 
 def calc_approach_waypoints_cw(x_curr, x_carp, approach_angle):
     """
+    calc_approach_waypoints_cw(x_curr, x_carp, approach_angle)\n
     Calculate approach waypoints for a clockwise approach.
-    """
 
+    Parameters
+    ----------
+        x_curr : array-like
+            Current XY position of UAV (m). Shape must be (2,)
+        x_carp : array-like
+            XY position of CARP (m). Shape must be (2,)
+        approach_angle : float 
+            Heading angle from which UAV will approach target, measured CCW from x-axis (rad)
+
+    Returns
+    ----------    
+        waypoints:array-like       
+            XY positions of approach waypoints (m). Shape=(n,2)
+    """
     # Heading vector
     theta = approach_angle
     e_approach = np.array([cos(theta), sin(theta)])
@@ -144,7 +191,22 @@ def calc_approach_waypoints_cw(x_curr, x_carp, approach_angle):
 
 def calc_approach_waypoints_ccw(x_curr, x_carp, approach_angle):
     """
+    calc_approach_waypoints_ccw(x_curr, x_carp, approach_angle)\n
     Calculate approach waypoints for a counter-clockwise approach.
+
+    Parameters
+    ----------
+        x_curr : array-like
+            Current XY position of UAV (m). Shape must be (2,)
+        x_carp : array-like
+            XY position of CARP (m). Shape must be (2,)
+        approach_angle : float 
+            Heading angle from which UAV will approach target, measured CCW from x-axis (rad)
+
+    Returns
+    ----------    
+        waypoints:array-like       
+            XY positions of approach waypoints (m). Shape=(n,2)
     """
 
     # Heading vector
@@ -204,8 +266,22 @@ def calc_approach_waypoints_ccw(x_curr, x_carp, approach_angle):
 
 def turnaround_cw(x_curr, heading_angle):
     """
-    Calculate waypoints for a clockwise turnaround (180 deg).
+    turnaround_cw(x_curr, heading_angle)\n
+    Calculate waypoints for a clockwise turnaround (180 deg)
+    
+    Parameters
+    ----------
+        x_curr : array-like
+            Current XY position of UAV (m). Shape must be (2,)
+        heading_angle : float 
+            Heading angle of UAV, measured CCW from x-axis (rad)
+
+    Returns
+    ----------    
+        waypoints:array-like       
+            XY positions of turnaround waypoints (m). Shape=(n,2)
     """
+
     e_heading = np.array([cos(heading_angle), sin(heading_angle)])
     e_ortho = np.array([e_heading[1], -e_heading[0]])  # possible orthogonal to heading vector
 
@@ -242,8 +318,22 @@ def turnaround_cw(x_curr, heading_angle):
 
 def turnaround_ccw(x_curr, heading_angle):
     """
-    Calculate waypoints for a counter-clockwise turnaround (180 deg).
+    turnaround_ccw(x_curr, heading_angle)\n
+    Calculate waypoints for a clockwise turnaround (180 deg)
+    
+    Parameters
+    ----------
+        x_curr : array-like
+            Current XY position of UAV (m). Shape must be (2,)
+        heading_angle : float 
+            Heading angle of UAV, measured CCW from x-axis (rad)
+
+    Returns
+    ----------    
+        waypoints : array-like       
+            XY positions of turnaround waypoints (m). Shape=(n,2)
     """
+
     e_heading = np.array([cos(heading_angle), sin(heading_angle)])
     e_ortho = np.array([e_heading[1], -e_heading[0]])  # possible orthogonal to heading vector
 
@@ -279,4 +369,96 @@ def turnaround_ccw(x_curr, heading_angle):
     waypoints[:,1] += (s[1] + R_LOITER*sin(angles))
 
     return waypoints
- 
+
+def send_mission_commands(initial_waypoints, return_waypoints):
+    """
+    send_mission_commands(initial_waypoints, return_waypoints)\n
+    Sends mission commands to autopilot via mavlink.
+    
+    Parameters
+    ----------
+        initial_waypoints : array-like
+            Waypoints for first-pass airdrop. Shape must be (n,2)
+        return_waypoints : array-like
+            Waypoints for subsequent airdrops. Shape must be (n,2)
+    """
+    # setup and wait for initial connection
+    master = mavutil.mavlink_connection('/dev/ttyAMA0', baud=921600)
+    master.wait_heartbeat()
+
+    # generate waypoint object in mavlink
+    waypoints = mavwp.MAVWPLoader()
+
+    # not really sure what these do
+    seq = 1
+    frame = mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT
+    
+    # Inital pass
+    for wp in initial_waypoints:
+        lat = wp[0]
+        lon = wp[1]
+        waypoints.add(mavutil.mavlink.MAVLink_mission_item_message(\
+                        master.target_system,
+                        master.target_component,
+                        seq,
+                        frame,
+                        mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,
+                        0, 0, 0, 11, 0, 0,
+                        lat, lon, ALT,
+                        1
+                        ))
+        seq += 1
+
+    # send each waypoint to the pixhawk; it will wait for each one
+    for i in range(waypoints.count()):
+        msg = master.recv_match(type=['MISSION_REQUEST'],blocking=True)
+        master.mav.send(waypoints.wp(msg.seq))
+        print('Sending waypoint {0}'.format(msg.seq))
+
+    return
+
+def write_mission_file(uav_coords, initial_waypoints, return_waypoints):
+    """
+    write_mission_file(uav_coords, initial_waypoints, return_waypoints)\n
+    Write mission commands to waypoint file for Mission Planner sim.
+
+    Parameters:
+    ----------
+        uav_coords : array-like
+            Current (lat,lon) position of UAV. Shape must be (2,)
+        initial_waypoints : array-like
+            Waypoints for first-pass airdrop. Shape must be (n,2)
+        return_waypoints : array-like
+            Waypoints for subsequent airdrops. Shape must be (n,2)
+            
+    File Format:
+    ----------
+    QGC WPL <VERSION>
+    <INDEX> <CURRENT WP> <COORD FRAME> <COMMAND> <PARAM1> <PARAM2> <PARAM3> <PARAM4> <PARAM5/X/LATITUDE> <PARAM6/Y/LONGITUDE> <PARAM7/Z/ALTITUDE> <AUTOCONTINUE>
+    ----------
+    """
+
+    # Write to file
+    with open("mission.waypoints", "w+") as ofile:
+        ofile.write('QGC WPL 110\n')
+        alt_ft = ALT*M_TO_FT
+
+        # Home Location
+        ofile.write('%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%d\n' % (0,1,0,16,0,0,0,0,uav_coords[0],uav_coords[1],alt_ft,1))
+        
+        # Airdrop passes
+        item_count = 1 
+        for drop_num in range(4):
+            # Waypoints
+            if drop_num==0:
+                for i, wp in enumerate(initial_waypoints):
+                    ofile.write('%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%d\n' % (item_count,0,0,16,0,0,0,0,wp[0],wp[1],alt_ft,1))
+                    item_count+=1
+            else:
+                for i, wp in enumerate(return_waypoints):
+                    ofile.write('%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%d\n' % (item_count,0,0,16,0,0,0,0,wp[0],wp[1],alt_ft,1))
+                    item_count+=1
+
+            # Servo command
+            ofile.write('%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%d\n' % (item_count,0,0,183,0,0,0,0,0,0,0,1))
+            item_count+=1
