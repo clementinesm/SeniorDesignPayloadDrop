@@ -20,7 +20,7 @@ def convert_coord_to_vector(coord, coord_ref):
 
     Returns
     ----------    
-        coords:array-like       
+        coord:array-like       
             (lat, lon) of converted vector. Shape=(2,)
     """
 
@@ -417,14 +417,14 @@ def send_mission_commands(initial_waypoints, return_waypoints):
 
     return
 
-def write_mission_file(uav_coords, initial_waypoints, return_waypoints):
+def write_mission_file(uav_coord, initial_waypoints, return_waypoints):
     """
-    write_mission_file(uav_coords, initial_waypoints, return_waypoints)\n
+    write_mission_file(uav_coord, initial_waypoints, return_waypoints)\n
     Write mission commands to waypoint file for Mission Planner sim.
 
     Parameters:
     ----------
-        uav_coords : array-like
+        uav_coord : array-like
             Current (lat,lon) position of UAV. Shape must be (2,)
         initial_waypoints : array-like
             Waypoints for first-pass airdrop. Shape must be (n,2)
@@ -444,7 +444,7 @@ def write_mission_file(uav_coords, initial_waypoints, return_waypoints):
         alt_ft = ALT*M_TO_FT
 
         # Home Location
-        ofile.write('%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%d\n' % (0,1,0,16,0,0,0,0,uav_coords[0],uav_coords[1],alt_ft,1))
+        ofile.write('%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%d\n' % (0,1,0,16,0,0,0,0,uav_coord[0],uav_coord[1],alt_ft,1))
         
         # Airdrop passes
         item_count = 1 
