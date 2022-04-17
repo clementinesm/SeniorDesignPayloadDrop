@@ -1,16 +1,12 @@
-from turtle import heading
 import numpy as np
-from numpy import sin, cos, arctan2, arcsin, ceil, vstack
+from numpy import sin, cos, arctan2, arcsin, ceil
 from numpy.linalg import norm
 from payload_constants import *
-
-APPROACH_ANGLE = 110*PI/180  # approach angle (rad)
 
 # Functions
 def convert_coords_to_vector(coord, coord_ref):
     """
-    coord     : terminal point
-    coord_ref : coordinates of origin
+    Convert `coord` to xy vector with origin `coord_ref` (unit meters)
     """
     lat_0 = coord_ref[0]
     lon_0 = coord_ref[1]
@@ -22,8 +18,7 @@ def convert_coords_to_vector(coord, coord_ref):
 
 def convert_vector_to_coords(xy, coord_ref):
     """
-    xy        : x-y displacement in meters
-    coord_ref : coordinates of origin
+    Convert `xy` vector with origin `coord_ref` to (lat, lon)
     """
     lat_0 = coord_ref[0]
     lon_0 = coord_ref[1]
@@ -33,8 +28,21 @@ def convert_vector_to_coords(xy, coord_ref):
 
 
 def caclulate_CARP(v_wind, approach_angle):
+    """
+    caclulate_CARP(v_wind, approach_angle)\n
+    Calculate optimal release point for payload drop.
 
+    ## Parameters:\n
+        v_wind:array-like
+            Wind velocity (m/s). Dim must be (3,)
+        approach_angle:float 
+            Heading angle from which UAV will approach target, measured CCW from x-axis (rad)
+    ## Returns:\n    
+        carp_xy:array-like       
+            XY-location of CARP relative to target (m).
+    """
     theta = approach_angle
+    e_approach = np.array([cos(theta), sin(theta)])
 
     # State vector
     x = 0.           # initial location of the payload
@@ -68,38 +76,18 @@ def caclulate_CARP(v_wind, approach_angle):
         # Increment one timestep
         psi += psi_dot*timestep   
 
+    # Shift CARP to account for drop signal delay
+    carp_xy = np.array([-psi[0], -psi[1]])
+    delay_distance = V_UAV*DROP_DELAY_TIME
+    carp_xy-=delay_distance*e_approach
+
     # return CARP (displacement from target in xy)
-    return np.array([-psi[0], -psi[1]])
+    return carp_xy
 
-"""def calc_loiter_circle_center(x_uav, x_carp):
-
-    # return:
-        # s : center of loiter circle (xy relative to target)
-        # p : final approach point (xy relative to target)
-
-    theta = APPROACH_ANGLE
-    e_approach = np.array([cos(theta), sin(theta)])
-
-    p = x_carp - e_approach*D_APPROACH                # final point in loiter
-    e_ps = np.array([e_approach[1], -e_approach[0]])  # orthogonal to approach vector
-
-    # Choose loiter circle to travel clockwise
-    if np.cross(e_approach, e_ps) < 0:
-        pass
-    else:
-        e_ps *= -1
-
-    s = p + e_ps*R_LOITER    # Center of loiter circle
-
-    # Check if UAV is near circle
-    if norm(x_uav-s) <= 2*R_LOITER:
-        p -= D_APPROACH*e_approach
-        s -= D_APPROACH*e_approach
-
-    return s, p
-"""
-
-def calc_approach_waypoints_cw(x_uav, x_carp, approach_angle):
+def calc_approach_waypoints_cw(x_curr, x_carp, approach_angle):
+    """
+    Calculate approach waypoints for a clockwise approach.
+    """
 
     # Heading vector
     theta = approach_angle
@@ -118,18 +106,18 @@ def calc_approach_waypoints_cw(x_uav, x_carp, approach_angle):
     s = p + e_ps*R_LOITER    # Center of loiter circle
 
     # Check if UAV is near circle
-    if norm(x_uav-s) <= 2*R_LOITER:
+    if norm(x_curr-s) <= 2*R_LOITER:
         p -= D_APPROACH*e_approach
         s -= D_APPROACH*e_approach
 
-    theta = arctan2(s[1]-x_uav[1], s[0]-x_uav[0])  # angle to center of circle
-    alpha = arcsin(R_LOITER/norm(x_uav-s))         # angle between center and tangent 
-    D = np.abs(norm(x_uav-s)*cos(alpha))           # Distance to tangent
-    x_1 = x_uav + np.array([D*cos(theta+alpha),D*sin(theta+alpha)])   # tangent point 1
-    x_2 = x_uav + np.array([D*cos(theta-alpha),D*sin(theta-alpha)])   # tangent point 2
+    theta = arctan2(s[1]-x_curr[1], s[0]-x_curr[0])  # angle to center of circle
+    alpha = arcsin(R_LOITER/norm(x_curr-s))         # angle between center and tangent 
+    D = np.abs(norm(x_curr-s)*cos(alpha))           # Distance to tangent
+    x_1 = x_curr + np.array([D*cos(theta+alpha),D*sin(theta+alpha)])   # tangent point 1
+    x_2 = x_curr + np.array([D*cos(theta-alpha),D*sin(theta-alpha)])   # tangent point 2
 
     # Choose point to travel clockwise
-    if np.cross(s-x_1, x_uav-x_1) < 0:
+    if np.cross(s-x_1, x_curr-x_1) < 0:
         x_t = x_1
     else:
         x_t = x_2
@@ -154,7 +142,10 @@ def calc_approach_waypoints_cw(x_uav, x_carp, approach_angle):
     waypoints = np.vstack((waypoints, x_carp))   # append carp
     return waypoints
 
-def calc_approach_waypoints_ccw(x_uav, x_carp, approach_angle):
+def calc_approach_waypoints_ccw(x_curr, x_carp, approach_angle):
+    """
+    Calculate approach waypoints for a counter-clockwise approach.
+    """
 
     # Heading vector
     theta = approach_angle
@@ -173,18 +164,18 @@ def calc_approach_waypoints_ccw(x_uav, x_carp, approach_angle):
     s = p + e_ps*R_LOITER    # Center of loiter circle
 
     # Check if UAV is near circle
-    if norm(x_uav-s) <= 2*R_LOITER:
+    if norm(x_curr-s) <= 2*R_LOITER:
         p -= D_APPROACH*e_approach
         s -= D_APPROACH*e_approach
 
-    theta = arctan2(s[1]-x_uav[1], s[0]-x_uav[0])  # angle to center of circle
-    alpha = arcsin(R_LOITER/norm(x_uav-s))         # angle between center and tangent 
-    D = np.abs(norm(x_uav-s)*cos(alpha))           # Distance to tangent
-    x_1 = x_uav + np.array([D*cos(theta+alpha),D*sin(theta+alpha)])   # tangent point 1
-    x_2 = x_uav + np.array([D*cos(theta-alpha),D*sin(theta-alpha)])   # tangent point 2
+    theta = arctan2(s[1]-x_curr[1], s[0]-x_curr[0])  # angle to center of circle
+    alpha = arcsin(R_LOITER/norm(x_curr-s))         # angle between center and tangent 
+    D = np.abs(norm(x_curr-s)*cos(alpha))           # Distance to tangent
+    x_1 = x_curr + np.array([D*cos(theta+alpha),D*sin(theta+alpha)])   # tangent point 1
+    x_2 = x_curr + np.array([D*cos(theta-alpha),D*sin(theta-alpha)])   # tangent point 2
 
     # Choose point to travel clockwise
-    if np.cross(s-x_1, x_uav-x_1) > 0:
+    if np.cross(s-x_1, x_curr-x_1) > 0:
         x_t = x_1
     else:
         x_t = x_2
@@ -212,6 +203,9 @@ def calc_approach_waypoints_ccw(x_uav, x_carp, approach_angle):
     return waypoints
 
 def turnaround_cw(x_curr, heading_angle):
+    """
+    Calculate waypoints for a clockwise turnaround (180 deg).
+    """
     e_heading = np.array([cos(heading_angle), sin(heading_angle)])
     e_ortho = np.array([e_heading[1], -e_heading[0]])  # possible orthogonal to heading vector
 
@@ -247,6 +241,9 @@ def turnaround_cw(x_curr, heading_angle):
     return waypoints
 
 def turnaround_ccw(x_curr, heading_angle):
+    """
+    Calculate waypoints for a counter-clockwise turnaround (180 deg).
+    """
     e_heading = np.array([cos(heading_angle), sin(heading_angle)])
     e_ortho = np.array([e_heading[1], -e_heading[0]])  # possible orthogonal to heading vector
 

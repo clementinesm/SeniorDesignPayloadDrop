@@ -8,6 +8,7 @@ APPROACH_ANGLE_NW = 110*np.pi/180
 APPROACH_ANGLE_SE = -70*np.pi/180
 C_D = 0.5                 # drap coefficient of payload
 D_APPROACH = 150          # approach distance (m)
+DROP_DELAY_TIME = 1.13    # delay from drop signal to servo activation
 G = 9.81                  # gravitational constant (m/s^2)
 HALFWAY_LAT = 30.324386   # approximate latitude of middle of field
 M = 0.113398              # mass of the payload (kg)

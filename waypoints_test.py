@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import airdrop_functions as adp
-from payload_constants import *
+from airdrop_constants import *
 
 def test_waypoints(target_coords, v_wind, uav_coords):
 
@@ -72,7 +72,7 @@ def test_waypoints(target_coords, v_wind, uav_coords):
     plt.show()
 
 def main():
-    test = 4
+    test = 2
 
     if test==1:
         # NE approach
