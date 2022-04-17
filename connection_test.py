@@ -33,6 +33,8 @@ class connection_test(self):
         # want to know waypoints and gps coordinates for now
         # ***would want more 
 
+        # publishers - need to publish to the actuator command
+        self.actuator_pub = rospy.Publisher('/mavros/actuator_controls', ActuatorControl, queue_size=1000)
     #
     # Callback functions - update object variables continuously
     #
@@ -51,6 +53,7 @@ class connection_test(self):
     def test_servo_drop(self):
 
 
+
     # write the altitude of the plane to a log file
     def log_altitude(self, rate_hz):
     	rate = rospy.rate(rate_hz)
@@ -66,7 +69,10 @@ class connection_test(self):
     	rospy.loginfo("checking servo actuation")
     	# need to come up with message for success and failure.
 
-        
+    def run_all_tests(self):
+    	check_connection(self)
+    	test_servo_drop(self)
+
 
 
 # this function tests connection using mavutil only
