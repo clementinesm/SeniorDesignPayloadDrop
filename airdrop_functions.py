@@ -1,7 +1,7 @@
 import numpy as np
 from numpy import sin, cos, arctan2, arcsin, ceil
 from numpy.linalg import norm
-from payload_constants import *
+from airdrop_constants import *
 
 # Functions
 def convert_coords_to_vector(coord, coord_ref):
