@@ -10,18 +10,24 @@ def test_waypoints(target_coord, v_wind, uav_coord):
     uav_xy = adp.convert_coord_to_vector(uav_coord, target_coord)
 
     # Calculate CARP and waypoints
-    if target_coord[0] > HALFWAY_LAT:
-        carp_xy = adp.caclulate_CARP(v_wind, APPROACH_ANGLE_NW)
-        first_pass_waypoints_xy = adp.calc_approach_waypoints_cw(uav_xy, carp_xy, APPROACH_ANGLE_NW)
-        turnaround_points_xy = adp.turnaround_cw(carp_xy, APPROACH_ANGLE_NW)
-        next_pass_waypoints_xy = adp.calc_approach_waypoints_cw(turnaround_points_xy[-1], carp_xy, APPROACH_ANGLE_NW)
-        next_pass_waypoints_xy = np.vstack((turnaround_points_xy, next_pass_waypoints_xy))
-    else:
-        carp_xy = adp.caclulate_CARP(v_wind, APPROACH_ANGLE_SE)
-        first_pass_waypoints_xy = adp.calc_approach_waypoints_ccw(uav_xy, carp_xy, APPROACH_ANGLE_SE)
-        turnaround_points_xy = adp.turnaround_ccw(carp_xy, APPROACH_ANGLE_SE)
-        next_pass_waypoints_xy = adp.calc_approach_waypoints_ccw(turnaround_points_xy[-1], carp_xy, APPROACH_ANGLE_SE)
-        next_pass_waypoints_xy = np.vstack((turnaround_points_xy, next_pass_waypoints_xy))
+    # if target_coord[0] > HALFWAY_LAT:
+    #     carp_xy = adp.caclulate_CARP(v_wind, APPROACH_ANGLE_NW)
+    #     first_pass_waypoints_xy = adp.calc_approach_waypoints_cw(uav_xy, carp_xy, APPROACH_ANGLE_NW)
+    #     turnaround_points_xy = adp.turnaround_cw(carp_xy, APPROACH_ANGLE_NW)
+    #     next_pass_waypoints_xy = adp.calc_approach_waypoints_cw(turnaround_points_xy[-1], carp_xy, APPROACH_ANGLE_NW)
+    #     next_pass_waypoints_xy = np.vstack((turnaround_points_xy, next_pass_waypoints_xy))
+    # else:
+    #     carp_xy = adp.caclulate_CARP(v_wind, APPROACH_ANGLE_SE)
+    #     first_pass_waypoints_xy = adp.calc_approach_waypoints_ccw(uav_xy, carp_xy, APPROACH_ANGLE_SE)
+    #     turnaround_points_xy = adp.turnaround_ccw(carp_xy, APPROACH_ANGLE_SE)
+    #     next_pass_waypoints_xy = adp.calc_approach_waypoints_ccw(turnaround_points_xy[-1], carp_xy, APPROACH_ANGLE_SE)
+    #     next_pass_waypoints_xy = np.vstack((turnaround_points_xy, next_pass_waypoints_xy))
+
+    carp_xy = adp.caclulate_CARP(v_wind, APPROACH_ANGLE_NW)
+    first_pass_waypoints_xy = adp.calc_approach_waypoints_cw(uav_xy, carp_xy, APPROACH_ANGLE_NW)
+    turnaround_points_xy = adp.turnaround_cw(carp_xy, APPROACH_ANGLE_NW)
+    next_pass_waypoints_xy = adp.calc_approach_waypoints_cw(turnaround_points_xy[-1], carp_xy, APPROACH_ANGLE_NW)
+    next_pass_waypoints_xy = np.vstack((turnaround_points_xy, next_pass_waypoints_xy))
 
     first_pass_waypoints = adp.convert_vector_to_coord(first_pass_waypoints_xy, target_coord)
     next_pass_waypoints = [adp.convert_vector_to_coord(wp, target_coord) for wp in next_pass_waypoints_xy]
@@ -44,7 +50,7 @@ def test_waypoints(target_coord, v_wind, uav_coord):
     ax.text(uav_coord[1]-5*EPS, uav_coord[0]+EPS, 'UAV', size=FONTSIZE, color='white')
 
     ax.scatter(first_pass_waypoints[:,1], first_pass_waypoints[:,0], s=10, c='lime')
-    ax.scatter(next_pass_waypoints[:,1], next_pass_waypoints[:,0], s=10, c='cyan')
+    # ax.scatter(next_pass_waypoints[:,1], next_pass_waypoints[:,0], s=10, c='cyan')
 
     wind_coord = [30.3254, -97.6]
     plt.quiver(wind_coord[1], wind_coord[0], v_wind[0], v_wind[1], scale_units='inches', scale=5, color='white')
@@ -57,7 +63,7 @@ def test_waypoints(target_coord, v_wind, uav_coord):
     plt.show()
 
 def main():
-    test = 5
+    test = 6
 
     if test==1:
         # NE approach
@@ -101,6 +107,16 @@ def main():
         uav_coord = adp.convert_vector_to_coord(uav_xy, target_coord)
         windspeed = 0  # m/s
         wind_angle = -150*PI/180
+        v_wind = np.array([windspeed*np.cos(wind_angle), windspeed*np.sin(wind_angle), 0])
+        test_waypoints(target_coord, v_wind, uav_coord)
+    elif test==6:
+        # Real drop test
+        # NE approach
+        target_coord = np.array([30.323960,-97.602418])
+        uav_xy = 2*R_LOITER*np.array([-np.sin(APPROACH_ANGLE_SE), np.cos(APPROACH_ANGLE_SE)])
+        uav_coord = adp.convert_vector_to_coord(uav_xy, target_coord)
+        windspeed = 5.36  # m/s
+        wind_angle = -110*PI/180
         v_wind = np.array([windspeed*np.cos(wind_angle), windspeed*np.sin(wind_angle), 0])
         test_waypoints(target_coord, v_wind, uav_coord)
 

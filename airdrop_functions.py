@@ -107,9 +107,13 @@ def caclulate_CARP(v_wind, approach_angle):
     x = 0.           # initial location of the payload
     y = 0.           # initial location of the payload
     z = ALT          # release height in meter(200 feet)
-    vx = V_UAV*cos(theta)      # x component of the payload velocity 
-    vy = V_UAV*sin(theta)      # y component of the payload velocity
-    vz = 0.                        # z component of the payload velocity/ initially 0
+    # vx = V_UAV*cos(theta)      # x component of the payload velocity 
+    # vy = V_UAV*sin(theta)      # y component of the payload velocity
+    # vz = 0.                        # z component of the payload velocity/ initially 0
+
+    vx = V_UAV*cos(theta)+v_wind[0]      # x component of the payload velocity 
+    vy = V_UAV*sin(theta)+v_wind[1]      # y component of the payload velocity
+    vz = v_wind[2]                       # z component of the payload velocity/ initially 0
 
     # Initial condition
     psi = np.array([x, y, z, vx, vy, vz])
@@ -119,6 +123,7 @@ def caclulate_CARP(v_wind, approach_angle):
     while psi[2] > 0:
         # Update wind estimate
         w = v_wind
+        w = np.zeros(3)
 
         # Update airspeed v_r
         v_r = np.sqrt((psi[3]-w[0])**2 + (psi[4]-w[1])**2 + (psi[5]-w[2])**2) 
@@ -471,7 +476,7 @@ def write_mission_file(first_pass_waypoints, next_pass_waypoints):
     """
 
     # Write to file
-    with open("mission.waypoints", "w+") as ofile:
+    with open("payload_mission.waypoints", "w+") as ofile:
         ofile.write('QGC WPL 110\n')
         alt_ft = ALT*M_TO_FT
 
@@ -485,7 +490,9 @@ def write_mission_file(first_pass_waypoints, next_pass_waypoints):
             # Waypoints
             if drop_num==0:
                 for wp in first_pass_waypoints:
-                    ofile.write('%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%d\n' % (item_count,0,0,16,0,0,0,0,wp[0],wp[1],alt_ft,1))
+                    # ofile.write('%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%d\n' % (item_count,0,0,16,0,0,0,0,wp[0],wp[1],alt_ft,1))
+                    ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,3,16,0,0,0,0,wp[0],wp[1],ALT,1))
+                    # ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,0,16,0,0,0,0,wp[0],wp[1],alt_ft,1))
                     item_count+=1
             else:
                 # Continue to next pass
@@ -494,7 +501,9 @@ def write_mission_file(first_pass_waypoints, next_pass_waypoints):
                         # Close payload doors after first waypoint following drop
                         ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,0,183,9,1900,0,0,0,0,0,1))
                         item_count+=1
-                    ofile.write('%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%d\n' % (item_count,0,0,16,0,0,0,0,wp[0],wp[1],alt_ft,1))
+                    # ofile.write('%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%d\n' % (item_count,0,0,16,0,0,0,0,wp[0],wp[1],alt_ft,1))
+                    ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,3,16,0,0,0,0,wp[0],wp[1],ALT,1))
+                    # ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,0,16,0,0,0,0,wp[0],wp[1],alt_ft,1))
                     item_count+=1
 
             # Open payload doors
