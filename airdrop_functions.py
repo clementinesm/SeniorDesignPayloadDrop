@@ -13,24 +13,38 @@ def convert_coord_to_vector(coord, coord_ref):
 
     Parameters
     ----------
-        xy:array-like
-            xy vector of point (m/s). Shape must be (2,)
-        coord_ref:array-like 
+        coord : array-like       
+            (lat, lon) of converted vector. Shape=(2,) or (2,n)
+        coord_ref : array-like 
             (lat, lon) of origin. Shape must be (2,)
 
     Returns
     ----------    
-        coord:array-like       
-            (lat, lon) of converted vector. Shape=(2,)
+        xy : array-like
+            xy vector of point (m/s). Shape matches `coord`
     """
-
-    lat_0 = coord_ref[0]
-    lon_0 = coord_ref[1]
-    lat_1 = coord[0]
-    lon_1 = coord[1]
-    x = (lon_1 - lon_0)*R_EARTH*(PI/180)*cos(lat_0 * PI/180)
-    y = (lat_1 - lat_0)*R_EARTH*PI/180
-    return np.array([x,y])
+    coord_arr = np.array(coord, copy=True)
+    
+    if coord_arr.ndim==1:
+        lat_0 = coord_ref[0]
+        lon_0 = coord_ref[1]
+        lat_1 = coord[0]
+        lon_1 = coord[1]
+        x = (lon_1 - lon_0)*R_EARTH*(PI/180)*cos(lat_0 * PI/180)
+        y = (lat_1 - lat_0)*R_EARTH*PI/180
+        xy = np.array([x,y])
+    elif coord_arr.ndim==2:
+        lat_0 = coord_ref[:,0]
+        lon_0 = coord_ref[:,1]
+        lat_1 = coord[0]
+        lon_1 = coord[1]
+        x = (lon_1 - lon_0)*R_EARTH*(PI/180)*cos(lat_0 * PI/180)
+        y = (lat_1 - lat_0)*R_EARTH*PI/180
+        xy = np.column_stack((x,y))
+    else:
+        # dimenion error
+        return    
+    return xy
 
 def convert_vector_to_coord(xy, coord_ref):
     """
@@ -39,22 +53,34 @@ def convert_vector_to_coord(xy, coord_ref):
 
     Parameters
     ----------
-        xy:array-like
-            xy vector of point (m/s). Shape must be (2,)
-        coord_ref:array-like 
+        xy : array-like
+            xy vector of point (m). Shape must be (2,)
+        coord_ref : array-like 
             (lat, lon) of origin. Shape must be (2,)
 
     Returns
     ----------    
-        coord:array-like       
+        coord : array-like       
             (lat, lon) of converted vector. Shape=(2,)
     """
 
-    lat_0 = coord_ref[0]
-    lon_0 = coord_ref[1]
-    lat_1 = lat_0 + (xy[1]/R_EARTH)*(180 / PI)
-    lon_1 = lon_0 + (xy[0]/R_EARTH)*(180 / PI) / cos(lat_0 * PI/180)
-    return np.array([lat_1, lon_1])
+    xy_arr = np.array(xy)
+    if np.ndim(xy_arr)==1:
+        lat_0 = coord_ref[0]
+        lon_0 = coord_ref[1]
+        lat_1 = lat_0 + (xy[1]/R_EARTH)*(180 / PI)
+        lon_1 = lon_0 + (xy[0]/R_EARTH)*(180 / PI) / cos(lat_0 * PI/180)
+        coord = np.array([lat_1, lon_1])
+    elif np.ndim(xy_arr)==2:
+        lat_0 = coord_ref[0]
+        lon_0 = coord_ref[1]
+        lat_1 = lat_0 + (xy[:,1]/R_EARTH)*(180 / PI)
+        lon_1 = lon_0 + (xy[:,0]/R_EARTH)*(180 / PI) / cos(lat_0 * PI/180)
+        coord = np.column_stack((lat_1, lon_1))
+    else:
+        # dimension error
+        return
+    return coord
 
 
 def caclulate_CARP(v_wind, approach_angle):
@@ -64,14 +90,14 @@ def caclulate_CARP(v_wind, approach_angle):
 
     Parameters
     ----------
-        v_wind:array-like
+        v_wind : array-like
             Wind velocity (m/s). Shape must be (3,)
-        approach_angle:float 
+        approach_angle : float 
             Heading angle from which UAV will approach target, measured CCW from x-axis (rad)
 
     Returns
     ----------    
-        carp_xy:array-like       
+        carp_xy : array-like       
             XY-location of CARP relative to target (m). Shape=(2,)
     """
     theta = approach_angle
@@ -133,7 +159,7 @@ def calc_approach_waypoints_cw(x_curr, x_carp, approach_angle):
 
     Returns
     ----------    
-        waypoints:array-like       
+        waypoints : array-like       
             XY positions of approach waypoints (m). Shape=(n,2)
     """
     # Heading vector
@@ -186,6 +212,10 @@ def calc_approach_waypoints_cw(x_curr, x_carp, approach_angle):
     waypoints = np.zeros((npoints,2))
     waypoints[:,0] += (s[0] + R_LOITER*cos(angles))
     waypoints[:,1] += (s[1] + R_LOITER*sin(angles))
+
+    # Add midway approach point and CARP
+    mid_point = p + 0.5*e_approach*D_APPROACH
+    waypoints = np.vstack((waypoints, mid_point))   # append carp
     waypoints = np.vstack((waypoints, x_carp))   # append carp
     return waypoints
 
@@ -205,7 +235,7 @@ def calc_approach_waypoints_ccw(x_curr, x_carp, approach_angle):
 
     Returns
     ----------    
-        waypoints:array-like       
+        waypoints : array-like       
             XY positions of approach waypoints (m). Shape=(n,2)
     """
 
@@ -261,6 +291,10 @@ def calc_approach_waypoints_ccw(x_curr, x_carp, approach_angle):
     waypoints = np.zeros((npoints,2))
     waypoints[:,0] += (s[0] + R_LOITER*cos(angles))
     waypoints[:,1] += (s[1] + R_LOITER*sin(angles))
+
+    # Add midway approach point and CARP
+    mid_point = p + 0.5*e_approach*D_APPROACH
+    waypoints = np.vstack((waypoints, mid_point))   # append carp
     waypoints = np.vstack((waypoints, x_carp))   # append carp
     return waypoints
 
@@ -278,7 +312,7 @@ def turnaround_cw(x_curr, heading_angle):
 
     Returns
     ----------    
-        waypoints:array-like       
+        waypoints : array-like       
             XY positions of turnaround waypoints (m). Shape=(n,2)
     """
 
@@ -370,16 +404,16 @@ def turnaround_ccw(x_curr, heading_angle):
 
     return waypoints
 
-def send_mission_commands(initial_waypoints, return_waypoints):
+def send_mission_commands(first_pass_waypoints, next_pass_waypoints):
     """
-    send_mission_commands(initial_waypoints, return_waypoints)\n
+    send_mission_commands(first_pass_waypoints, next_pass_waypoints)\n
     Sends mission commands to autopilot via mavlink.
     
     Parameters
     ----------
-        initial_waypoints : array-like
+        first_pass_waypoints : array-like
             Waypoints for first-pass airdrop. Shape must be (n,2)
-        return_waypoints : array-like
+        next_pass_waypoints : array-like
             Waypoints for subsequent airdrops. Shape must be (n,2)
     """
     # setup and wait for initial connection
@@ -394,7 +428,7 @@ def send_mission_commands(initial_waypoints, return_waypoints):
     frame = mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT
     
     # Inital pass
-    for wp in initial_waypoints:
+    for wp in first_pass_waypoints:
         lat = wp[0]
         lon = wp[1]
         waypoints.add(mavutil.mavlink.MAVLink_mission_item_message(\
@@ -417,18 +451,16 @@ def send_mission_commands(initial_waypoints, return_waypoints):
 
     return
 
-def write_mission_file(uav_coord, initial_waypoints, return_waypoints):
+def write_mission_file(first_pass_waypoints, next_pass_waypoints):
     """
-    write_mission_file(uav_coord, initial_waypoints, return_waypoints)\n
+    write_mission_file(first_pass_waypoints, next_pass_waypoints)\n
     Write mission commands to waypoint file for Mission Planner sim.
 
     Parameters:
     ----------
-        uav_coord : array-like
-            Current (lat,lon) position of UAV. Shape must be (2,)
-        initial_waypoints : array-like
+        first_pass_waypoints : array-like
             Waypoints for first-pass airdrop. Shape must be (n,2)
-        return_waypoints : array-like
+        next_pass_waypoints : array-like
             Waypoints for subsequent airdrops. Shape must be (n,2)
             
     File Format:
@@ -444,21 +476,27 @@ def write_mission_file(uav_coord, initial_waypoints, return_waypoints):
         alt_ft = ALT*M_TO_FT
 
         # Home Location
-        ofile.write('%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%d\n' % (0,1,0,16,0,0,0,0,uav_coord[0],uav_coord[1],alt_ft,1))
+        home_coord = [30.324040, -97.602636]
+        ofile.write('%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%d\n' % (0,1,0,16,0,0,0,0,home_coord[0], home_coord[1],alt_ft,1))
         
         # Airdrop passes
         item_count = 1 
         for drop_num in range(4):
             # Waypoints
             if drop_num==0:
-                for i, wp in enumerate(initial_waypoints):
+                for wp in first_pass_waypoints:
                     ofile.write('%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%d\n' % (item_count,0,0,16,0,0,0,0,wp[0],wp[1],alt_ft,1))
                     item_count+=1
             else:
-                for i, wp in enumerate(return_waypoints):
+                # Continue to next pass
+                for i, wp in enumerate(next_pass_waypoints):
+                    if i==1:
+                        # Close payload doors after first waypoint following drop
+                        ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,0,183,9,1900,0,0,0,0,0,1))
+                        item_count+=1
                     ofile.write('%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%d\n' % (item_count,0,0,16,0,0,0,0,wp[0],wp[1],alt_ft,1))
                     item_count+=1
 
-            # Servo command
-            ofile.write('%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%d\n' % (item_count,0,0,183,0,0,0,0,0,0,0,1))
+            # Open payload doors
+            ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,0,183,9,1100,0,0,0,0,0,1))
             item_count+=1
