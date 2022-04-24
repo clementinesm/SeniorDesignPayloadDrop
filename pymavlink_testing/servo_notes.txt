@@ -1,0 +1,16 @@
+These are notes used to check if the servo is working as intended.
+
+USING DIFFERENT FLIGHT MODES:
+AUTO:
+MANUAL:
+STABILIZE:
+
+SWITCHING TO DIFFERENT FLIGHT MODES:
+AUTO:
+MANUAL:
+STABILIZE:
+
+USING DIFFERENT DROP COMMANDS:
+set_servo:
+command_long(MAV_CMD_DO_SET_SERVO):
+***uploading servo command to mission planner***

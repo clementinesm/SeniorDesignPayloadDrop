@@ -15,14 +15,25 @@ def delay(t,seq,frame):
         return msg
 
 # setup and wait for initial connection
-master = mavutil.mavlink_connection('/dev/ttyAMA0', baud=921600)
+#master = mavutil.mavlink_connection('/dev/ttyAMA0', baud=921600)
+#master.wait_heartbeat()
+
+# autodetect ports
+ports = mavutil.auto_detect_serial(preferred_list=['*CubeOrange*if00'])
+
+for port in ports:
+    print("%s" % port)
+
+# try connecting to the specified port
+master = mavutil.mavlink_connection(str(port), baud=921600)
 master.wait_heartbeat()
+
 print("received heartbeat from system")
 
 # generate waypoint object in mavlink
 waypoints = mavwp.MAVWPLoader()
 # not really sure what these do
-seq = 1
+seq = 0 # was 1
 frame = mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT
 
 # random gps coordinates, do not try to fly to these!!
@@ -38,7 +49,7 @@ for i in range(0, len(alt)):
                          seq,
                          frame,
                          mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,
-                         0, 1, 0, acceptance_radius[i], 0, 0,
+                         0, 1, 0, 0, 0, 0,
                          lat[i],lon[i],alt[i]))
 	seq += 1
 
@@ -53,12 +64,16 @@ print(curr_waypoint)
 
 master.waypoint_count_send(waypoints.count()) # get pixhawk ready to receive wp.count() waypoints
 
+print(waypoints.count())
 # send each waypoint to the pixhawk; it will wait for each one
 for i in range(waypoints.count()):
-	msg = master.recv_match(type=['MISSION_REQUEST'],blocking=True)
+	msg = master.recv_match(type='MISSION_REQUEST',blocking=True)
+	print('test')
 	master.mav.send(waypoints.wp(msg.seq))
 	print('Sending waypoint {0}'.format(msg.seq))
 
+# note: need to have a 22 waypoint (home, I believe)
+# why?: mission upload won't be accepted unless it is a valid mission!!
 
 # send servo signal to the pixhawk
 # 1100 - closed
@@ -84,6 +99,10 @@ close_servo = mavutil.mavlink.MAVLink_mission_item_message(master.target_system,
                         1,
                         9, 1900, 0, 0, 0, 0, 0)
 
+# delay and upload servo commands separately
+input("type any key to continue and upload servo commands")
+
+# will this overwrite the commands
 # might need to tell the mission planner how many commands it will receive?...
 master.waypoint_count_send(3) # don't hardcode this now
 master.recv_match(type=['MISSION_REQUEST'],blocking=True)
@@ -108,11 +127,15 @@ seq+=1
 
 # request download of ENTIRE mission plan
 #master.mav.send(type=['MISSION_REQUEST_LIST']) # request all mission items
-msg = master.waypoint_request_list_send()
+msg = master.waypoint_request_list_send() # doesn't seem to work
 print('a')
 print(msg)
 # this and 'mission_item_int' aren't working, can't figure out why
 msg = master.recv_match(type=['MISSION_COUNT'],blocking=True)
+
+# check current mission count
+print(msg)
+
 #print('b')
 #print(msg)
 # iterate through each operation that we sent to the mission planner
@@ -169,5 +192,5 @@ print('list of waypoints:')
 print(waypoint_list)
 """
 
-# trying to set servo value through a given channel
-#master.set_servo(channel=7, pwm=1000) # check what pwm should be
+# comment/note: need to check if "send" will actually send wp to MP
+# ^ might need another command to load waypoints in mp
