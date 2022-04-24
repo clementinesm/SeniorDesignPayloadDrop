@@ -18,9 +18,15 @@ master.mav.param_request_read_send(
 )
 
 # --- this reads messages as they arrive! ---
-message = master.recv_match(type='GPS_RAW_INT', blocking=True).to_dict()
+message = master.recv_match(type='SERVO_OUTPUT_RAW', blocking=True).to_dict()
 print(message.keys())
-print('current alt: %d' % (message['alt']))
+
+for key in message.keys():
+	if key[0] == 's':
+		print("Output of " + str(key) + ": %d" % (message[key]))
+
+print('current alt: %d' % (message['servo1_raw']))
+print('able to receive data using recv_match')
 
 time.sleep(5)
 message = master.recv_match(type='GPS_RAW_INT', blocking=True).to_dict()
