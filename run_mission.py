@@ -70,10 +70,10 @@ def run_mission(target_coord, master=None):
     for i in range(wp.count()):
         msg = master.recv_match(type=['MISSION_REQUEST'], blocking=True)
         # print(msg)
-        master.mav.send(wp.wp(msg.seq))
-        #print(wp.wp(msg.seq))
+        master.mav.send(wp(msg.seq))
+        #print(wp(msg.seq))
         # print('Sending waypoint {0}'.format(msg.seq))
 
 if __name__ == "__main__":
     gps_coord = np.array([30.3247721,-97.6028609])   # Example
-    run_mission(gps_coord) # read mission file with waypoints and servo commands
+    run_mission(gps_coord)
