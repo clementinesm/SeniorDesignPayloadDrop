@@ -9,12 +9,12 @@ from pymavlink import mavwp
 import time
 
 import rospy
-from mavros_msg.msg import Waypoint
-from mavros_msg.srv import WaypointPush, WaypointClear
+from mavros_msgs.msg import Waypoint
+from mavros_msgs.srv import WaypointPush, WaypointClear, WaypointPull
 
 # might want to pass a something ros-related to this
 #def run_mission(target_coord, master):
-def run_mission(target_coord):
+def run_mission_1(target_coord):
 
     # CARP = Target for walk
     carp_coord = target_coord # bc walking, drop on the target
@@ -104,10 +104,10 @@ def run_mission(target_coord):
 
                 
     # clear all waypoints using mavros; not sure what the function is atm
-
+    print('aaaaa') 
     # upload all waypoints using mavros
-    wp_push(start_index=0, waypoints=wps)
-
+    push = wp_push(start_index=0, waypoints=wps)
+    print(push)
                     
     """
     #cmd_set_home(home_location,home_altitude)
@@ -126,3 +126,6 @@ def run_mission(target_coord):
         #print(wp.wp(msg.seq))
         # print('Sending waypoint {0}'.format(msg.seq))
     """
+
+if __name__ == '__main__':
+    run_mission_1([30,-97])
