@@ -14,7 +14,6 @@ uav_coord = target_coord
 mission = np.loadtxt("payload_mission.txt")
 waypoints = mission[mission[:,3]==16]
 waypoint_coords = waypoints[:,8:10]
-print(waypoint_coords)
 
 # Plot on map
 EPS = 0.0001

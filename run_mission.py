@@ -6,12 +6,12 @@ import time
 
 def run_mission(target_coord, master=None):
 
-    # Get UAV Position
-    uav_coord = np.zeros((2))
-    uav_xy = adp.convert_coord_to_vector(uav_coord, target_coord)
+    ## TODO: Get UAV Position
+    # uav_coord = np.zeros((2))
+    # uav_xy = adp.convert_coord_to_vector(uav_coord, target_coord)
     uav_xy = np.zeros((2))
 
-    # Hard code wind
+    ## TODO: Hard code wind
     windspeed = 5  # m/s
     wind_angle = -150*PI/180
     v_wind = np.array([windspeed*np.cos(wind_angle), windspeed*np.sin(wind_angle), 0])
