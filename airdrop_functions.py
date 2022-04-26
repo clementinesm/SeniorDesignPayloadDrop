@@ -496,10 +496,10 @@ def write_mission_file(fname, first_pass_waypoints, next_pass_waypoints):
         ofile.write('QGC WPL 110\n')
         item_count = 0
 
-        # Home Location
-        home_coord = [30.291466, -97.738195]
-        ofile.write('%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%d\n' % (item_count,1,0,16,0,0,0,0,home_coord[0], home_coord[1],ALT,1))
-        item_count+=1
+        ## Home Location (exclude)
+        # home_coord = [30.291466, -97.738195]
+        # ofile.write('%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%d\n' % (item_count,1,0,16,0,0,0,0,home_coord[0], home_coord[1],ALT,1))
+        # item_count+=1
 
         # First pass
         num_wp = np.shape(first_pass_waypoints)[0]

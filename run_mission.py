@@ -31,8 +31,8 @@ def run_mission(target_coord, master=None):
     mission_array = adp.create_mission(first_pass_waypoints, next_pass_waypoints)
 
     if master==None:
-        print(mission_array.shape)
-        adp.write_mission_file("payload_mission.waypoint", first_pass_waypoints, next_pass_waypoints)
+        np.savetxt("./testing/payload_mission.txt", mission_array, fmt="%4d %4d %4d %4d %10.6f %10.6f %10.6f %10.6f %10.6f %10.6f %10.6f %4d")
+        adp.write_mission_file("./testing/payload_mission.waypoints", first_pass_waypoints, next_pass_waypoints)
         return
 
     # read the waypoints and send to mission planner
