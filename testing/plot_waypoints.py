@@ -3,7 +3,11 @@ import matplotlib.pyplot as plt
 
 # Hard-coded params
 target_coord = np.array([30.3247721,-97.6028609])
-v_wind = np.array([0.,0.,0.])
+
+windspeed = 5  # m/s
+wind_angle = -150*np.pi/180
+v_wind = np.array([windspeed*np.cos(wind_angle), windspeed*np.sin(wind_angle), 0])
+
 uav_coord = target_coord
 
 # Read waypoints

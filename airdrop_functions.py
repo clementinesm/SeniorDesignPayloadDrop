@@ -123,7 +123,7 @@ def caclulate_CARP(v_wind, approach_angle):
     while psi[2] > 0:
         # Update wind estimate
         w = v_wind
-        w = np.zeros(3)
+        # w = np.zeros(3)
 
         # Update airspeed v_r
         v_r = np.sqrt((psi[3]-w[0])**2 + (psi[4]-w[1])**2 + (psi[5]-w[2])**2) 

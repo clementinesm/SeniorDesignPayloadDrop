@@ -12,7 +12,9 @@ def run_mission(target_coord, master=None):
     uav_xy = np.zeros((2))
 
     # Hard code wind
-    v_wind = np.array([0.,0.,0.])
+    windspeed = 5  # m/s
+    wind_angle = -150*PI/180
+    v_wind = np.array([windspeed*np.cos(wind_angle), windspeed*np.sin(wind_angle), 0])
 
     # Calculate CARP
     carp_xy = adp.caclulate_CARP(v_wind, APPROACH_ANGLE)
