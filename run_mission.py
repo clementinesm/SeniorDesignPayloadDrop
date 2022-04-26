@@ -1,35 +1,21 @@
-# Group 2 - payload drop team
-# 4/24/2022
-# executable for walking flight test on 
-
 import airdrop_functions as adp
 from airdrop_constants import *
 from pymavlink import mavutil
 from pymavlink import mavwp
 import time
 
-def run_mission(target_coord):
+def run_mission(target_coord, master):
 
-    # set up connection to pixhawk
-    # detect pixhawk port using serial usb connection
-    ports = mavutil.auto_detect_serial(preferred_list=['*CubeOrange*if00'])
+    # Hard code wind
+    v_wind = np.array([0.,0.,0.])
 
-    for port in ports:
-        print("%s" % port)
-
-    # try connecting to the specified port, there should only be one
-    master = mavutil.mavlink_connection(str(port), baud=921600)
-    master.wait_heartbeat()
-
-    # CARP = Target for walk
-    carp_coord = target_coord # bc walking, drop on the target
+    # Calculate CARP
+    carp_xy = adp.caclulate_CARP(v_wind)
 
     # Generate waypoints
-    uav_xy = -D_APPROACH*np.array([np.cos(APPROACH_ANGLE_N), np.sin(APPROACH_ANGLE_N)])
-    carp_xy = adp.convert_coord_to_vector(carp_coord, target_coord)
-    first_pass_waypoints_xy = adp.calc_approach_waypoints_cw(uav_xy, carp_xy, APPROACH_ANGLE_N)
-    turnaround_points_xy = adp.turnaround_cw(carp_xy, APPROACH_ANGLE_N)
-    next_pass_waypoints_xy = adp.calc_approach_waypoints_cw(turnaround_points_xy[-1], carp_xy, APPROACH_ANGLE_N)
+    first_pass_waypoints_xy = adp.calc_approach_waypoints_cw(uav_xy, carp_xy)
+    turnaround_points_xy = adp.turnaround_cw(carp_xy)
+    next_pass_waypoints_xy = adp.calc_approach_waypoints_cw(turnaround_points_xy[-1], carp_xy)
     next_pass_waypoints_xy = np.vstack((turnaround_points_xy, next_pass_waypoints_xy))
 
     first_pass_waypoints = adp.convert_vector_to_coord(first_pass_waypoints_xy, target_coord)
@@ -40,7 +26,7 @@ def run_mission(target_coord):
     mission_file_name = "payload_mission.waypoints"
     adp.write_mission_file(mission_file_name, first_pass_waypoints, next_pass_waypoints)
 
-    # read the waypoints and send to mission planner!
+    # read the waypoints and send to mission planner
     wp = mavwp.MAVWPLoader()
 
     with open(mission_file_name) as f:
