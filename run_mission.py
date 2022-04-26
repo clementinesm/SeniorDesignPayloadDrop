@@ -1,7 +1,5 @@
 import airdrop_functions as adp
 from airdrop_constants import *
-from pymavlink import mavutil
-from pymavlink import mavwp
 import sys
 
 import rospy

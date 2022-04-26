@@ -19,3 +19,5 @@ SERVO_CHANNEL = 9         # Servo channel
 SERVO_OPEN = 1100         # Servo open PWM
 SERVO_CLOSE = 1900        # Servo closed PWM
 V_UAV = 17.               # Airspeed of UAV (m/s)
+WIND_SPEED = 3.576        # m/s
+WIND_ANGLE = -135*PI/180  # rad
