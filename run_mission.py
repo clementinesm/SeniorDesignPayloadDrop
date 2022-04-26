@@ -4,6 +4,10 @@ from pymavlink import mavutil
 from pymavlink import mavwp
 import sys
 
+import rospy
+from mavros_msgs.msg import Waypoint
+from mavros_msgs.srv import WaypointPush, WaypointClear, Waypointpull
+
 def run_mission(target_lat, target_lon, uav_lat, uav_lon):
     """
     run_mission(target_lat, target_lon, master=None)\n
@@ -25,8 +29,8 @@ def run_mission(target_lat, target_lon, uav_lat, uav_lon):
     uav_xy = adp.convert_coord_to_vector(uav_coord, target_coord)
 
     # Hard code wind
-    windspeed = 1.79  # m/s
-    wind_angle = -135*PI/180
+    windspeed = WIND_SPEED
+    wind_angle = WIND_ANGLE
     v_wind = np.array([windspeed*np.cos(wind_angle), windspeed*np.sin(wind_angle), 0])
 
     # Calculate CARP
@@ -49,37 +53,36 @@ def run_mission(target_lat, target_lon, uav_lat, uav_lon):
     adp.write_mission_file("./testing/payload_mission.waypoints", first_pass_waypoints, next_pass_waypoints)
 
     # format 
-    wp = mavwp.MAVWPLoader()
+    wp_push = rospy.ServiceProxy('mavros/mission/push', WaypointPush, persistent=True)
+    wp_clear = rospy.ServiceProxy('mavros/mission/clear', WaypointClear)
+    wp_pull = rospy.ServiceProxy('mavros/mission/pull', WaypointPull)
+    # not sure what "persistent" is.
+    wps = []
 
     for mission_cmd in mission_array:
-        ln_seq = int(mission_cmd[0])
-        ln_current = int(mission_cmd[1])
-        ln_frame = int(mission_cmd[2])
-        ln_command = int(mission_cmd[3])
-        ln_param1=float(mission_cmd[4])
-        ln_param2=float(mission_cmd[5])
-        ln_param3=float(mission_cmd[6])
-        ln_param4=float(mission_cmd[7])
-        ln_x=(float(mission_cmd[8]))
-        ln_y=(float(mission_cmd[9]))
-        ln_z=float(mission_cmd[10])
-        ln_autocontinue = int(mission_cmd[11])
+        wp = Waypoint()
 
-        mission_item_message = mavutil.mavlink.MAVLink_mission_item_message(vehicle.target_system, vehicle.target_component, ln_seq, ln_frame,
-                                                        ln_command,
-                                                        ln_current, ln_autocontinue, ln_param1, ln_param2, ln_param3, ln_param4, ln_x, ln_y, ln_z)
-        wp.add(mission_item_message)
+        wp.is_current = int(mission_cmd[1])
+        wp.frame = int(mission_cmd[2])
+        wp.command = int(mission_cmd[3])
+        wp.param1=float(mission_cmd[4])
+        wp.param2=float(mission_cmd[5])
+        wp.param3=float(mission_cmd[6])
+        wp.param4=float(mission_cmd[7])
+        wp.x_lat=(float(mission_cmd[8]))
+        wp.y_long=(float(mission_cmd[9]))
+        wp.z_alt=float(mission_cmd[10])
+        wp.autocontinue = int(float(mission_cmd[11]))
+
+        wps.append(wp)
     
     # send waypoints to autopilot
-    vehicle.waypoint_clear_all_send()
-    vehicle.waypoint_count_send(wp.count())
-    for i in range(wp.count()):
-        msg = vehicle.recv_match(type=['MISSION_REQUEST'], blocking=True)
-        vehicle.mav.send(wp.wp(msg.seq))
+    wp_push(start_index=0, waypoints=wps)
+
 
 if __name__ == "__main__":
-    target_lat = sys.argv[1]
-    target_lon = sys.argv[2]
-    uav_lat = sys.argv[3]
-    uav_lon = sys.argv[4]
+    uav_lat = sys.argv[1]
+    uav_lon = sys.argv[2]
+    target_lat = sys.argv[3]
+    target_lon = sys.argv[4]
     run_mission(target_lat, target_lon, uav_lat, uav_lon)
