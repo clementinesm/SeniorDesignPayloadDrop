@@ -6,6 +6,11 @@ import time
 
 def run_mission(target_coord, master):
 
+    # Get UAV Position
+    uav_coord = np.zeros((2))
+    uav_xy = adp.convert_coord_to_vector(uav_coord, target_coord)
+    uav_xy = np.zeros((2))
+
     # Hard code wind
     v_wind = np.array([0.,0.,0.])
 
@@ -22,57 +27,48 @@ def run_mission(target_coord, master):
     next_pass_waypoints = [adp.convert_vector_to_coord(wp, target_coord) for wp in next_pass_waypoints_xy]
     next_pass_waypoints = np.array(next_pass_waypoints)
 
-    # Write to file
-    mission_file_name = "payload_mission.waypoints"
-    adp.write_mission_file(mission_file_name, first_pass_waypoints, next_pass_waypoints)
+    # collect waypoints
+    mission_array = adp.create_mission(first_pass_waypoints, next_pass_waypoints)
 
     # read the waypoints and send to mission planner
     wp = mavwp.MAVWPLoader()
 
-    with open(mission_file_name) as f:
-        for i, line in enumerate(f):
-            if i==0:
-                if not line.startswith('QGC WPL 110'):
-                    raise Exception('File is not supported WP version')
-            else:   
-                linearray=line.split('\t')
-                ln_seq = int(linearray[0])
-                ln_current = int(linearray[1])
-                ln_frame = int(linearray[2])
-                ln_command = int(linearray[3])
-                ln_param1=float(linearray[4])
-                ln_param2=float(linearray[5])
-                ln_param3=float(linearray[6])
-                ln_param4=float(linearray[7])
-                ln_x=(float(linearray[8]))
-                ln_y=(float(linearray[9]))
-                ln_z=float(linearray[10])
-                ln_autocontinue = int(float(linearray[11].strip()))
-                if(i == 1):
-                    home_location = (ln_x,ln_y)
-                    home_altitude = ln_z
-                p = mavutil.mavlink.MAVLink_mission_item_message(master.target_system, master.target_component, ln_seq, ln_frame,
-                                                                ln_command,
-                                                                ln_current, ln_autocontinue, ln_param1, ln_param2, ln_param3, ln_param4, ln_x, ln_y, ln_z)
-                wp.add(p)
+    for mission_cmd in mission_array:
+        ln_seq = int(mission_cmd[0])
+        ln_current = int(mission_cmd[1])
+        ln_frame = int(mission_cmd[2])
+        ln_command = int(mission_cmd[3])
+        ln_param1=float(mission_cmd[4])
+        ln_param2=float(mission_cmd[5])
+        ln_param3=float(mission_cmd[6])
+        ln_param4=float(mission_cmd[7])
+        ln_x=(float(mission_cmd[8]))
+        ln_y=(float(mission_cmd[9]))
+        ln_z=float(mission_cmd[10])
+        ln_autocontinue = int(float(mission_cmd[11].strip()))
+
+        mission_item_message = mavutil.mavlink.MAVLink_mission_item_message(master.target_system, master.target_component, ln_seq, ln_frame,
+                                                        ln_command,
+                                                        ln_current, ln_autocontinue, ln_param1, ln_param2, ln_param3, ln_param4, ln_x, ln_y, ln_z)
+        wp.add(mission_item_message)
                 
                     
     #cmd_set_home(home_location,home_altitude)
-    msg = master.recv_match(type = ['COMMAND_ACK'],blocking = True)
+    # msg = master.recv_match(type = ['COMMAND_ACK'],blocking = True)
     # print(msg)
     # print('Set home location: {0} {1}'.format(home_location[0],home_location[1]))
-    time.sleep(1)
+    # time.sleep(1)
     
     #send waypoint to airframe
     master.waypoint_clear_all_send()
     master.waypoint_count_send(wp.count())
     for i in range(wp.count()):
-        msg = master.recv_match(type=['MISSION_REQUEST'],blocking=True)
+        msg = master.recv_match(type=['MISSION_REQUEST'], blocking=True)
         # print(msg)
         master.mav.send(wp.wp(msg.seq))
         #print(wp.wp(msg.seq))
         # print('Sending waypoint {0}'.format(msg.seq))
 
 if __name__ == "__main__":
-    gps_coord = np.array([30.291466, -97.738195])   # Hard code in front of ASE
+    gps_coord = np.array([30.291466, -97.738195])   # Example
     run_mission(gps_coord) # read mission file with waypoints and servo commands
