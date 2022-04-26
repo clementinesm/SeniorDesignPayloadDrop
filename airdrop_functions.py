@@ -513,7 +513,7 @@ def write_mission_file(fname, first_pass_waypoints, next_pass_waypoints):
             item_count+=1
 
         # Release payload at release point
-        ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,0,183,9,1100,0,0,0,0,0,1))
+        ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,0,183,SERVO_CHANNEL,SERVO_OPEN,0,0,0,0,0,1))
         item_count+=1
 
         # Next pass
@@ -524,7 +524,7 @@ def write_mission_file(fname, first_pass_waypoints, next_pass_waypoints):
                 # Close payload doors after first waypoint following drop
                 ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,3,16,0,0,0,0,wp[0],wp[1],ALT,1))
                 item_count+=1
-                ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,0,183,9,1900,0,0,0,0,0,1))
+                ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,0,183,SERVO_CHANNEL,SERVO_CLOSE,0,0,0,0,0,1))
             elif i==num_wp-1:
                 # Release point is final point in pass
                 ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,3,16,0,5,0,0,wp[0],wp[1],ALT,1))
@@ -534,7 +534,7 @@ def write_mission_file(fname, first_pass_waypoints, next_pass_waypoints):
             item_count+=1
 
         # Release payload at release point
-        ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,0,183,9,1100,0,0,0,0,0,1))
+        ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,0,183,SERVO_CHANNEL,SERVO_OPEN,0,0,0,0,0,1))
         item_count+=1
 
         # Repeat passes
