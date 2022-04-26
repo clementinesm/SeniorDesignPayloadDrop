@@ -4,12 +4,28 @@ from pymavlink import mavutil
 from pymavlink import mavwp
 import time
 
-def run_mission(target_coord, master=None):
+def run_mission(target_lat, target_lon, vehicle=None):
+    """
+    run_mission(target_lat, target_lon, master=None)\n
+    Run a payload dropping mission. Writes mission to file/sends to pixhawk.
+
+    Parameters
+    ----------
+        target_lat : float       
+            lattitude of target
+        target_lon : float       
+            longitude of target        
+        vehicle :  pymavlink object?
+    """
+    # Target 
+    target_coord = np.array([target_lat, target_lon])
 
     ## TODO: Get UAV Position
-    # uav_coord = np.zeros((2))
-    # uav_xy = adp.convert_coord_to_vector(uav_coord, target_coord)
-    uav_xy = np.zeros((2))
+    uav_lat = vehicle.location.global_relative_frame.lat
+    uav_lon = vehicle.location.global_relative_frame.lon
+    uav_coord = np.array([uav_lat, uav_lon])
+    uav_xy = adp.convert_coord_to_vector(uav_coord, target_coord)
+    # uav_xy = np.zeros((2))
 
     ## TODO: Hard code wind
     windspeed = 5  # m/s
@@ -29,15 +45,15 @@ def run_mission(target_coord, master=None):
     next_pass_waypoints = [adp.convert_vector_to_coord(wp, target_coord) for wp in next_pass_waypoints_xy]
     next_pass_waypoints = np.array(next_pass_waypoints)
 
-    # collect waypoints
+    # Collect waypoints
     mission_array = adp.create_mission(first_pass_waypoints, next_pass_waypoints)
 
-    if master==None:
+    if vehicle==None:
         np.savetxt("./testing/payload_mission.txt", mission_array, fmt="%4d %4d %4d %4d %10.6f %10.6f %10.6f %10.6f %10.6f %10.6f %10.6f %4d")
         adp.write_mission_file("./testing/payload_mission.waypoints", first_pass_waypoints, next_pass_waypoints)
         return
 
-    # read the waypoints and send to mission planner
+    # format 
     wp = mavwp.MAVWPLoader()
 
     for mission_cmd in mission_array:
@@ -54,28 +70,18 @@ def run_mission(target_coord, master=None):
         ln_z=float(mission_cmd[10])
         ln_autocontinue = int(mission_cmd[11])
 
-        mission_item_message = mavutil.mavlink.MAVLink_mission_item_message(master.target_system, master.target_component, ln_seq, ln_frame,
+        mission_item_message = mavutil.mavlink.MAVLink_mission_item_message(vehicle.target_system, vehicle.target_component, ln_seq, ln_frame,
                                                         ln_command,
                                                         ln_current, ln_autocontinue, ln_param1, ln_param2, ln_param3, ln_param4, ln_x, ln_y, ln_z)
         wp.add(mission_item_message)
-                
-                    
-    #cmd_set_home(home_location,home_altitude)
-    # msg = master.recv_match(type = ['COMMAND_ACK'],blocking = True)
-    # print(msg)
-    # print('Set home location: {0} {1}'.format(home_location[0],home_location[1]))
-    # time.sleep(1)
     
-    #send waypoint to airframe
-    master.waypoint_clear_all_send()
-    master.waypoint_count_send(wp.count())
+    # send waypoints to autopilot
+    vehicle.waypoint_clear_all_send()
+    vehicle.waypoint_count_send(wp.count())
     for i in range(wp.count()):
-        msg = master.recv_match(type=['MISSION_REQUEST'], blocking=True)
-        # print(msg)
-        master.mav.send(wp.wp(msg.seq))
-        #print(wp(msg.seq))
-        # print('Sending waypoint {0}'.format(msg.seq))
+        msg = vehicle.recv_match(type=['MISSION_REQUEST'], blocking=True)
+        vehicle.mav.send(wp.wp(msg.seq))
 
 if __name__ == "__main__":
     gps_coord = np.array([30.3247721,-97.6028609])   # Example
-    run_mission(gps_coord)
+    run_mission(gps_coord[0], gps_coord[1])
