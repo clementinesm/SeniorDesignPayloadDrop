@@ -2,8 +2,9 @@ import airdrop_functions as adp
 from airdrop_constants import *
 from pymavlink import mavutil
 from pymavlink import mavwp
+import sys
 
-def run_mission(target_lat, target_lon, vehicle=None):
+def run_mission(target_lat, target_lon, uav_lat, uav_lon):
     """
     run_mission(target_lat, target_lon, master=None)\n
     Run a payload dropping mission. Writes mission to file/sends to pixhawk.
@@ -19,14 +20,9 @@ def run_mission(target_lat, target_lon, vehicle=None):
     # Target 
     target_coord = np.array([target_lat, target_lon])
 
-    ## TODO: Get UAV Position
-    if vehicle==None:
-        uav_xy = np.zeros((2))
-    else:
-        uav_lat = vehicle.location.global_relative_frame.lat
-        uav_lon = vehicle.location.global_relative_frame.lon
-        uav_coord = np.array([uav_lat, uav_lon])
-        uav_xy = adp.convert_coord_to_vector(uav_coord, target_coord)
+    ##  Get UAV Position
+    uav_coord = np.array([uav_lat, uav_lon])
+    uav_xy = adp.convert_coord_to_vector(uav_coord, target_coord)
 
     # Hard code wind
     windspeed = 1.79  # m/s
@@ -49,10 +45,8 @@ def run_mission(target_lat, target_lon, vehicle=None):
     # Collect waypoints
     mission_array = adp.create_mission(first_pass_waypoints, next_pass_waypoints)
 
-    if vehicle==None:
-        np.savetxt("./testing/payload_mission.txt", mission_array, fmt="%4d %4d %4d %4d %10.6f %10.6f %10.6f %10.6f %10.6f %10.6f %10.6f %4d")
-        adp.write_mission_file("./testing/payload_mission.waypoints", first_pass_waypoints, next_pass_waypoints)
-        return
+    np.savetxt("./testing/payload_mission.txt", mission_array, fmt="%4d %4d %4d %4d %10.6f %10.6f %10.6f %10.6f %10.6f %10.6f %10.6f %4d")
+    adp.write_mission_file("./testing/payload_mission.waypoints", first_pass_waypoints, next_pass_waypoints)
 
     # format 
     wp = mavwp.MAVWPLoader()
@@ -84,5 +78,8 @@ def run_mission(target_lat, target_lon, vehicle=None):
         vehicle.mav.send(wp.wp(msg.seq))
 
 if __name__ == "__main__":
-    gps_coord = np.array([30.3247721,-97.6028609])   # Example
-    run_mission(gps_coord[0], gps_coord[1])
+    target_lat = sys.argv[1]
+    target_lon = sys.argv[2]
+    uav_lat = sys.argv[3]
+    uav_lon = sys.argv[4]
+    run_mission(target_lat, target_lon, uav_lat, uav_lon)
