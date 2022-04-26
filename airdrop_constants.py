@@ -2,7 +2,7 @@ import numpy as np
 
 # Constants
 A = 0.0324300504528       # projected area of payload (m^2)
-ALT = 60.69               # flying altitude (m)
+ALT = 68.58               # flying altitude (m)
 ALT_GROUND = 0.8382       # ground altitude (m)
 APPROACH_ANGLE = 110*np.pi/180   # rad
 C_D = 0.25                # drap coefficient of payload

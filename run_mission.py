@@ -79,8 +79,8 @@ def run_mission(target_lat, target_lon, uav_lat, uav_lon):
 
 
 if __name__ == "__main__":
-    uav_lat = sys.argv[1]
-    uav_lon = sys.argv[2]
-    target_lat = sys.argv[3]
-    target_lon = sys.argv[4]
+    uav_lat = float(sys.argv[1])
+    uav_lon = float(sys.argv[2])
+    target_lat = float(sys.argv[3])
+    target_lon = float(sys.argv[4])
     run_mission(target_lat, target_lon, uav_lat, uav_lon)
