@@ -509,3 +509,70 @@ def write_mission_file(first_pass_waypoints, next_pass_waypoints):
             # Open payload doors
             ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,0,183,9,1100,0,0,0,0,0,1))
             item_count+=1
+
+def write_mission_file(fname, first_pass_waypoints, next_pass_waypoints):
+    """
+    write_mission_file(first_pass_waypoints, next_pass_waypoints)\n
+    Write mission commands to waypoint file for Mission Planner sim.
+
+    Parameters:
+    ----------
+        first_pass_waypoints : array-like
+            Waypoints for first-pass airdrop. Shape must be (n,2)
+        next_pass_waypoints : array-like
+            Waypoints for subsequent airdrops. Shape must be (n,2)
+            
+    File Format:
+    ----------
+    QGC WPL <VERSION>
+    <INDEX> <CURRENT WP> <COORD FRAME> <COMMAND> <PARAM1> <PARAM2> <PARAM3> <PARAM4> <PARAM5/X/LATITUDE> <PARAM6/Y/LONGITUDE> <PARAM7/Z/ALTITUDE> <AUTOCONTINUE>
+    ----------
+    """
+    # Write to file
+    with open(fname, "w+") as ofile:
+        ofile.write('QGC WPL 110\n')
+        item_count = 0
+
+        # Home Location
+        home_coord = [30.291466, -97.738195]
+        ofile.write('%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%d\n' % (item_count,1,0,16,0,0,0,0,home_coord[0], home_coord[1],ALT,1))
+        item_count+=1
+
+        # First pass
+        num_wp = np.shape(first_pass_waypoints)[0]
+        for i, wp in enumerate(first_pass_waypoints):
+            if i==num_wp-1:
+                # Release point is final point in pass
+                ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,3,16,0,5,0,0,wp[0],wp[1],ALT,1))
+            else:
+                # Approach point
+                ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,3,16,0,0,0,0,wp[0],wp[1],ALT,1))
+            item_count+=1
+
+        # Release payload at release point
+        ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,0,183,9,1100,0,0,0,0,0,1))
+        item_count+=1
+
+        # Next pass
+        repeat_start = item_count
+        num_wp = np.shape(next_pass_waypoints)[0]
+        for i, wp in enumerate(next_pass_waypoints):
+            if i==1:
+                # Close payload doors after first waypoint following drop
+                ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,3,16,0,0,0,0,wp[0],wp[1],ALT,1))
+                item_count+=1
+                ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,0,183,9,1900,0,0,0,0,0,1))
+            elif i==num_wp-1:
+                # Release point is final point in pass
+                ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,3,16,0,5,0,0,wp[0],wp[1],ALT,1))
+            else:
+                # Approach point
+                ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,3,16,0,0,0,0,wp[0],wp[1],ALT,1))
+            item_count+=1
+
+        # Release payload at release point
+        ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,0,183,9,1100,0,0,0,0,0,1))
+        item_count+=1
+
+        # Repeat passes
+        ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,3,177,repeat_start,2,0,0,0,0,0,1))

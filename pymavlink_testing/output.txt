@@ -1,3 +1,0 @@
-output file for mavlink testing 4/6/2022
-
-
