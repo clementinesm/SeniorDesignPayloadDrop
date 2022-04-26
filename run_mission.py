@@ -3,7 +3,7 @@ from airdrop_constants import *
 from pymavlink import mavutil
 from pymavlink import mavwp
 
-def run_mission(target_lat, target_lon, vehicle=None):
+def run_mission(target_lat, target_lon, vehicle):
     """
     run_mission(target_lat, target_lon, master=None)\n
     Run a payload dropping mission. Writes mission to file/sends to pixhawk.
@@ -16,17 +16,18 @@ def run_mission(target_lat, target_lon, vehicle=None):
             longitude of target        
         vehicle :  pymavlink object?
     """
+
+    f = open("mission_outfile.txt", 'w')
+
     # Target 
     target_coord = np.array([target_lat, target_lon])
 
     ## TODO: Get UAV Position
-    if vehicle==None:
-        uav_xy = np.zeros((2))
-    else:
-        uav_lat = vehicle.location.global_relative_frame.lat
-        uav_lon = vehicle.location.global_relative_frame.lon
-        uav_coord = np.array([uav_lat, uav_lon])
-        uav_xy = adp.convert_coord_to_vector(uav_coord, target_coord)
+    uav_lat = vehicle.location.global_relative_frame.lat
+    uav_lon = vehicle.location.global_relative_frame.lon
+    f.write("UAV location: {:f} {:f}\n".format(uav_lat, uav_lon))
+    uav_coord = np.array([uav_lat, uav_lon])
+    uav_xy = adp.convert_coord_to_vector(uav_coord, target_coord)
 
     # Hard code wind
     windspeed = 1.79  # m/s
@@ -48,11 +49,7 @@ def run_mission(target_lat, target_lon, vehicle=None):
 
     # Collect waypoints
     mission_array = adp.create_mission(first_pass_waypoints, next_pass_waypoints)
-
-    if vehicle==None:
-        np.savetxt("./testing/payload_mission.txt", mission_array, fmt="%4d %4d %4d %4d %10.6f %10.6f %10.6f %10.6f %10.6f %10.6f %10.6f %4d")
-        adp.write_mission_file("./testing/payload_mission.waypoints", first_pass_waypoints, next_pass_waypoints)
-        return
+    np.savetxt("./testing/payload_mission.txt", mission_array, fmt="%4d %4d %4d %4d %10.6f %10.6f %10.6f %10.6f %10.6f %10.6f %10.6f %4d")
 
     # format 
     wp = mavwp.MAVWPLoader()
@@ -81,8 +78,16 @@ def run_mission(target_lat, target_lon, vehicle=None):
     vehicle.waypoint_count_send(wp.count())
     for i in range(wp.count()):
         msg = vehicle.recv_match(type=['MISSION_REQUEST'], blocking=True)
+        f.write("Mission request\n")
         vehicle.mav.send(wp.wp(msg.seq))
+        f.write("Waypoints sent\n")
+    f.write("Done\n")
+    f.close()
 
 if __name__ == "__main__":
+    # Mission test
+    from dronekit import connect
+    port = mavutil.auto_detect_serial(preferred_list=['*CubeOrange*if00'])
+    vehicle = connect(str(port[0]), wait_ready=True, baud=921600)
     gps_coord = np.array([30.3247721,-97.6028609])   # Example
-    run_mission(gps_coord[0], gps_coord[1])
+    run_mission(gps_coord[0], gps_coord[1], vehicle)
