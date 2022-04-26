@@ -4,7 +4,7 @@ from pymavlink import mavutil
 from pymavlink import mavwp
 import time
 
-def run_mission(target_coord, master):
+def run_mission(target_coord, master=None):
 
     # Get UAV Position
     uav_coord = np.zeros((2))
@@ -15,12 +15,12 @@ def run_mission(target_coord, master):
     v_wind = np.array([0.,0.,0.])
 
     # Calculate CARP
-    carp_xy = adp.caclulate_CARP(v_wind)
+    carp_xy = adp.caclulate_CARP(v_wind, APPROACH_ANGLE)
 
     # Generate waypoints
-    first_pass_waypoints_xy = adp.calc_approach_waypoints_cw(uav_xy, carp_xy)
-    turnaround_points_xy = adp.turnaround_cw(carp_xy)
-    next_pass_waypoints_xy = adp.calc_approach_waypoints_cw(turnaround_points_xy[-1], carp_xy)
+    first_pass_waypoints_xy = adp.calc_approach_waypoints_cw(uav_xy, carp_xy, APPROACH_ANGLE)
+    turnaround_points_xy = adp.turnaround_cw(carp_xy, APPROACH_ANGLE)
+    next_pass_waypoints_xy = adp.calc_approach_waypoints_cw(turnaround_points_xy[-1], carp_xy, APPROACH_ANGLE)
     next_pass_waypoints_xy = np.vstack((turnaround_points_xy, next_pass_waypoints_xy))
 
     first_pass_waypoints = adp.convert_vector_to_coord(first_pass_waypoints_xy, target_coord)
@@ -29,6 +29,11 @@ def run_mission(target_coord, master):
 
     # collect waypoints
     mission_array = adp.create_mission(first_pass_waypoints, next_pass_waypoints)
+
+    if master==None:
+        print(mission_array.shape)
+        adp.write_mission_file("payload_mission.waypoint", first_pass_waypoints, next_pass_waypoints)
+        return
 
     # read the waypoints and send to mission planner
     wp = mavwp.MAVWPLoader()
@@ -45,7 +50,7 @@ def run_mission(target_coord, master):
         ln_x=(float(mission_cmd[8]))
         ln_y=(float(mission_cmd[9]))
         ln_z=float(mission_cmd[10])
-        ln_autocontinue = int(float(mission_cmd[11].strip()))
+        ln_autocontinue = int(mission_cmd[11])
 
         mission_item_message = mavutil.mavlink.MAVLink_mission_item_message(master.target_system, master.target_component, ln_seq, ln_frame,
                                                         ln_command,
@@ -70,5 +75,5 @@ def run_mission(target_coord, master):
         # print('Sending waypoint {0}'.format(msg.seq))
 
 if __name__ == "__main__":
-    gps_coord = np.array([30.291466, -97.738195])   # Example
+    gps_coord = np.array([30.3247721,-97.6028609])   # Example
     run_mission(gps_coord) # read mission file with waypoints and servo commands

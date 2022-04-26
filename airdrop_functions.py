@@ -83,7 +83,7 @@ def convert_vector_to_coord(xy, coord_ref):
     return coord
 
 
-def caclulate_CARP(v_wind):
+def caclulate_CARP(v_wind, approach_angle):
     """
     caclulate_CARP(v_wind, approach_angle)\n
     Calculate optimal release point for payload drop.
@@ -100,7 +100,7 @@ def caclulate_CARP(v_wind):
         carp_xy : array-like       
             XY-location of CARP relative to target (m). Shape=(2,)
     """
-    theta = APPROACH_ANGLE
+    theta = approach_angle
     e_approach = np.array([cos(theta), sin(theta)])
 
     # State vector
@@ -148,11 +148,11 @@ def caclulate_CARP(v_wind):
     # return CARP (displacement from target in xy)
     return carp_xy
 
-def calc_approach_waypoints_cw(x_curr, x_carp):
+
+def calc_approach_waypoints_cw(x_curr, x_carp, approach_angle):
     """
     calc_approach_waypoints_cw(x_curr, x_carp, approach_angle)\n
     Calculate approach waypoints for a clockwise approach.
-
     Parameters
     ----------
         x_curr : array-like
@@ -161,14 +161,13 @@ def calc_approach_waypoints_cw(x_curr, x_carp):
             XY position of CARP (m). Shape must be (2,)
         approach_angle : float 
             Heading angle from which UAV will approach target, measured CCW from x-axis (rad)
-
     Returns
     ----------    
         waypoints : array-like       
             XY positions of approach waypoints (m). Shape=(n,2)
     """
     # Heading vector
-    theta = APPROACH_ANGLE
+    theta = approach_angle
     e_approach = np.array([cos(theta), sin(theta)])
 
     # Final approach point
@@ -224,11 +223,10 @@ def calc_approach_waypoints_cw(x_curr, x_carp):
     waypoints = np.vstack((waypoints, x_carp))   # append carp
     return waypoints
 
-def calc_approach_waypoints_ccw(x_curr, x_carp):
+def calc_approach_waypoints_ccw(x_curr, x_carp, approach_angle):
     """
     calc_approach_waypoints_ccw(x_curr, x_carp, approach_angle)\n
     Calculate approach waypoints for a counter-clockwise approach.
-
     Parameters
     ----------
         x_curr : array-like
@@ -237,7 +235,6 @@ def calc_approach_waypoints_ccw(x_curr, x_carp):
             XY position of CARP (m). Shape must be (2,)
         approach_angle : float 
             Heading angle from which UAV will approach target, measured CCW from x-axis (rad)
-
     Returns
     ----------    
         waypoints : array-like       
@@ -245,7 +242,7 @@ def calc_approach_waypoints_ccw(x_curr, x_carp):
     """
 
     # Heading vector
-    theta = APPROACH_ANGLE
+    theta = approach_angle
     e_approach = np.array([cos(theta), sin(theta)])
 
     # Final approach point
@@ -408,51 +405,6 @@ def turnaround_ccw(x_curr, heading_angle):
     waypoints[:,1] += (s[1] + R_LOITER*sin(angles))
 
     return waypoints
-
-def send_mission_commands(first_pass_waypoints, next_pass_waypoints):
-    """
-    send_mission_commands(first_pass_waypoints, next_pass_waypoints)\n
-    Sends mission commands to autopilot via mavlink.
-    
-    Parameters
-    ----------
-        first_pass_waypoints : array-like
-            Waypoints for first-pass airdrop. Shape must be (n,2)
-        next_pass_waypoints : array-like
-            Waypoints for subsequent airdrops. Shape must be (n,2)
-    """
-
-    # generate waypoint object in mavlink
-    waypoints = mavwp.MAVWPLoader()
-
-    # not really sure what these do
-    seq = 1
-    frame = mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT
-    
-    # Inital pass
-    for wp in first_pass_waypoints:
-        lat = wp[0]
-        lon = wp[1]
-        waypoints.add(mavutil.mavlink.MAVLink_mission_item_message(\
-                        master.target_system,
-                        master.target_component,
-                        seq,
-                        frame,
-                        mavutil.mavlink.MAV_CMD_NAV_WAYPOINT,
-                        0, 0, 0, 11, 0, 0,
-                        lat, lon, ALT,
-                        1
-                        ))
-        seq += 1
-
-    # send each waypoint to the pixhawk; it will wait for each one
-    for i in range(waypoints.count()):
-        msg = master.recv_match(type=['MISSION_REQUEST'],blocking=True)
-        master.mav.send(waypoints.wp(msg.seq))
-        print('Sending waypoint {0}'.format(msg.seq))
-
-    return
-
 
 def create_mission(first_pass_waypoints, next_pass_waypoints):
     """
