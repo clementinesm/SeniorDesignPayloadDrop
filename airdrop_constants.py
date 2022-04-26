@@ -16,6 +16,6 @@ M_TO_FT = 3.28084         # m to ft conversion factor
 PI = np.pi                # pi
 PPR = 8                   # waypoints per revolution 
 R_EARTH = 6378*10**3      # radius of earth (m)
-R_LOITER = 55.            # turn radius (m)
+R_LOITER = 75.            # turn radius (m)
 RHO = 1.225               # fluid density of air (kg/m^3)        
 V_UAV = 17                # speed of UAV (m/s)

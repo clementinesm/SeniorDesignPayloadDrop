@@ -50,7 +50,7 @@ def test_waypoints(target_coord, v_wind, uav_coord):
     ax.text(uav_coord[1]-5*EPS, uav_coord[0]+EPS, 'UAV', size=FONTSIZE, color='white')
 
     ax.scatter(first_pass_waypoints[:,1], first_pass_waypoints[:,0], s=10, c='lime')
-    # ax.scatter(next_pass_waypoints[:,1], next_pass_waypoints[:,0], s=10, c='cyan')
+    ax.scatter(next_pass_waypoints[:,1], next_pass_waypoints[:,0], s=10, c='cyan')
 
     wind_coord = [30.3254, -97.6]
     plt.quiver(wind_coord[1], wind_coord[0], v_wind[0], v_wind[1], scale_units='inches', scale=5, color='white')

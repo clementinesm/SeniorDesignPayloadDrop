@@ -1,5 +1,0 @@
-import numpy
-
-def main():
-  
-  
