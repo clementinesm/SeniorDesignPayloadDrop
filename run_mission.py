@@ -2,7 +2,6 @@ import airdrop_functions as adp
 from airdrop_constants import *
 from pymavlink import mavutil
 from pymavlink import mavwp
-import time
 
 def run_mission(target_lat, target_lon, vehicle=None):
     """
@@ -21,15 +20,17 @@ def run_mission(target_lat, target_lon, vehicle=None):
     target_coord = np.array([target_lat, target_lon])
 
     ## TODO: Get UAV Position
-    uav_lat = vehicle.location.global_relative_frame.lat
-    uav_lon = vehicle.location.global_relative_frame.lon
-    uav_coord = np.array([uav_lat, uav_lon])
-    uav_xy = adp.convert_coord_to_vector(uav_coord, target_coord)
-    # uav_xy = np.zeros((2))
+    if vehicle==None:
+        uav_xy = np.zeros((2))
+    else:
+        uav_lat = vehicle.location.global_relative_frame.lat
+        uav_lon = vehicle.location.global_relative_frame.lon
+        uav_coord = np.array([uav_lat, uav_lon])
+        uav_xy = adp.convert_coord_to_vector(uav_coord, target_coord)
 
-    ## TODO: Hard code wind
-    windspeed = 5  # m/s
-    wind_angle = -150*PI/180
+    # Hard code wind
+    windspeed = 1.79  # m/s
+    wind_angle = -135*PI/180
     v_wind = np.array([windspeed*np.cos(wind_angle), windspeed*np.sin(wind_angle), 0])
 
     # Calculate CARP
