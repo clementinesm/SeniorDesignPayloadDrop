@@ -30,8 +30,8 @@ def run_mission(target_lat, target_lon, vehicle):
     uav_xy = adp.convert_coord_to_vector(uav_coord, target_coord)
 
     # Hard code wind
-    windspeed = 1.79  # m/s
-    wind_angle = -135*PI/180
+    wind_angle = WIND_ANGLE
+    windspeed = WIND_SPEED
     v_wind = np.array([windspeed*np.cos(wind_angle), windspeed*np.sin(wind_angle), 0])
 
     # Calculate CARP
