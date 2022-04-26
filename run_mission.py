@@ -72,7 +72,7 @@ def run_mission(target_coord, master=None):
     for i in range(wp.count()):
         msg = master.recv_match(type=['MISSION_REQUEST'], blocking=True)
         # print(msg)
-        master.mav.send(wp(msg.seq))
+        master.mav.send(wp.wp(msg.seq))
         #print(wp(msg.seq))
         # print('Sending waypoint {0}'.format(msg.seq))
 
