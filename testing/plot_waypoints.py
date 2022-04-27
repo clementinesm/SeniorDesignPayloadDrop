@@ -31,10 +31,6 @@ ax.text(uav_coord[1]-5*EPS, uav_coord[0]+EPS, 'UAV', size=FONTSIZE, color='white
 
 ax.scatter(waypoint_coords[:,1], waypoint_coords[:,0], s=10, c='lime')
 
-wind_coord = [30.3254, -97.6]
-plt.quiver(wind_coord[1], wind_coord[0], v_wind[0], v_wind[1], scale_units='inches', scale=5, color='white')
-ax.text(wind_coord[1]-2*EPS, wind_coord[0]+2*EPS, 'Wind', size=FONTSIZE, color='white')
-
 ax.set_xlim(BBox[0],BBox[1])
 ax.set_ylim(BBox[2],BBox[3])
 
