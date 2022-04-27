@@ -1,8 +1,6 @@
 import numpy as np
 from numpy import sin, cos, arctan2, arcsin, ceil
 from numpy.linalg import norm
-from pymavlink import mavutil, mavwp
-
 from airdrop_constants import *
 
 # Functions
@@ -435,7 +433,7 @@ def create_mission(first_pass_waypoints, next_pass_waypoints):
     # First pass
     num_wp = np.shape(first_pass_waypoints)[0]
     for i, wp in enumerate(first_pass_waypoints):
-        if i==num_wp-1:
+        if i>=num_wp-2:
             # Release point is final point in pass
             mission.append([item_count,0,3,16,0,5,0,0,wp[0],wp[1],ALT,1])
         else:
@@ -456,7 +454,7 @@ def create_mission(first_pass_waypoints, next_pass_waypoints):
             mission.append([item_count,0,3,16,0,0,0,0,wp[0],wp[1],ALT,1])
             item_count+=1
             mission.append([item_count,0,0,183,SERVO_CHANNEL,SERVO_CLOSE,0,0,0,0,0,1])
-        elif i==num_wp-1:
+        elif i>=num_wp-2:
             # Release point is final point in pass
             mission.append([item_count,0,3,16,0,5,0,0,wp[0],wp[1],ALT,1])
         else:
@@ -469,7 +467,7 @@ def create_mission(first_pass_waypoints, next_pass_waypoints):
     item_count+=1
 
     # Repeat passes
-    mission.append([item_count,0,3,177,repeat_start,2,0,0,0,0,0,1])
+    mission.append([item_count,0,3,177,repeat_start,-1,0,0,0,0,0,1])
 
     return(np.array(mission))
 
@@ -504,7 +502,7 @@ def write_mission_file(fname, first_pass_waypoints, next_pass_waypoints):
         # First pass
         num_wp = np.shape(first_pass_waypoints)[0]
         for i, wp in enumerate(first_pass_waypoints):
-            if i==num_wp-1:
+            if i>=num_wp-2:
                 # Release point is final point in pass
                 ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,3,16,0,5,0,0,wp[0],wp[1],ALT,1))
             else:
@@ -525,7 +523,7 @@ def write_mission_file(fname, first_pass_waypoints, next_pass_waypoints):
                 ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,3,16,0,0,0,0,wp[0],wp[1],ALT,1))
                 item_count+=1
                 ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,0,183,9,1900,0,0,0,0,0,1))
-            elif i==num_wp-1:
+            elif i>=num_wp-2:
                 # Release point is final point in pass
                 ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,3,16,0,5,0,0,wp[0],wp[1],ALT,1))
             else:
@@ -538,4 +536,4 @@ def write_mission_file(fname, first_pass_waypoints, next_pass_waypoints):
         item_count+=1
 
         # Repeat passes
-        ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,3,177,repeat_start,2,0,0,0,0,0,1))
+        ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,3,177,repeat_start,-1,0,0,0,0,0,1))

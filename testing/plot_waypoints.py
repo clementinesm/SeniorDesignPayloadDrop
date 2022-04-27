@@ -11,7 +11,8 @@ v_wind = np.array([windspeed*np.cos(wind_angle), windspeed*np.sin(wind_angle), 0
 uav_coord = target_coord
 
 # Read waypoints
-mission = np.loadtxt("payload_mission.txt")
+# mission = np.loadtxt("payload_mission.txt")
+mission = np.loadtxt("payload_mission.waypoints", skiprows=1)
 waypoints = mission[mission[:,3]==16]
 waypoint_coords = waypoints[:,8:10]
 
