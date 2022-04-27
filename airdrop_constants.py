@@ -4,7 +4,7 @@ import numpy as np
 A = 0.0324300504528       # projected area of payload (m^2)
 ALT = 60.69               # flying altitude (m)
 ALT_GROUND = 0.8382       # ground altitude (m)
-APPROACH_ANGLE = 110*np.pi/180   # rad
+APPROACH_ANGLE = -70*np.pi/180   # rad
 C_D = 0.25                # drap coefficient of payload
 D_APPROACH = 100.         # approach distance (m)
 DROP_DELAY_TIME = 1.13    # delay from drop signal to servo activation

@@ -38,10 +38,16 @@ def run_mission(target_lat, target_lon, vehicle):
     carp_xy = adp.caclulate_CARP(v_wind, APPROACH_ANGLE)
 
     # Generate waypoints
-    first_pass_waypoints_xy = adp.calc_approach_waypoints_cw(uav_xy, carp_xy, APPROACH_ANGLE)
-    turnaround_points_xy = adp.turnaround_cw(carp_xy, APPROACH_ANGLE)
-    next_pass_waypoints_xy = adp.calc_approach_waypoints_cw(turnaround_points_xy[-1], carp_xy, APPROACH_ANGLE)
-    next_pass_waypoints_xy = np.vstack((turnaround_points_xy, next_pass_waypoints_xy))
+    if APPROACH_ANGLE > 0:
+        first_pass_waypoints_xy = adp.calc_approach_waypoints_cw(uav_xy, carp_xy, APPROACH_ANGLE)
+        turnaround_points_xy = adp.turnaround_cw(carp_xy, APPROACH_ANGLE)
+        next_pass_waypoints_xy = adp.calc_approach_waypoints_cw(turnaround_points_xy[-1], carp_xy, APPROACH_ANGLE)
+        next_pass_waypoints_xy = np.vstack((turnaround_points_xy, next_pass_waypoints_xy))
+    else:
+        first_pass_waypoints_xy = adp.calc_approach_waypoints_ccw(uav_xy, carp_xy, APPROACH_ANGLE)
+        turnaround_points_xy = adp.turnaround_ccw(carp_xy, APPROACH_ANGLE)
+        next_pass_waypoints_xy = adp.calc_approach_waypoints_ccw(turnaround_points_xy[-1], carp_xy, APPROACH_ANGLE)
+        next_pass_waypoints_xy = np.vstack((turnaround_points_xy, next_pass_waypoints_xy)) 
 
     first_pass_waypoints = adp.convert_vector_to_coord(first_pass_waypoints_xy, target_coord)
     next_pass_waypoints = [adp.convert_vector_to_coord(wp, target_coord) for wp in next_pass_waypoints_xy]
