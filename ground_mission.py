@@ -47,6 +47,7 @@ def run_mission(target_coord, uav_coord):
 
 if __name__ == "__main__":
     target_coord = np.array([30.3246094,-97.6027463])
+    
     uav_xy = 2*R_LOITER*np.array([np.sin(APPROACH_ANGLE), -np.cos(APPROACH_ANGLE)])
     uav_coord = adp.convert_vector_to_coord(uav_xy, target_coord)
     print(uav_coord)
