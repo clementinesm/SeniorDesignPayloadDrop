@@ -492,7 +492,7 @@ def write_mission_file(fname, first_pass_waypoints, next_pass_waypoints):
     # Write to file
     with open(fname, "w+") as ofile:
         ofile.write('QGC WPL 110\n')
-        item_count = 0
+        item_count = 1
 
         ## Home Location (exclude)
         # home_coord = [30.291466, -97.738195]
