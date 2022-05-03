@@ -499,7 +499,7 @@ def write_mission_file(first_pass_waypoints, next_pass_waypoints):
                 for i, wp in enumerate(next_pass_waypoints):
                     if i==1:
                         # Close payload doors after first waypoint following drop
-                        ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,0,183,9,1900,0,0,0,0,0,1))
+                        ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,0,183,5,1900,0,0,0,0,0,1))
                         item_count+=1
                     # ofile.write('%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\t%d\n' % (item_count,0,0,16,0,0,0,0,wp[0],wp[1],alt_ft,1))
                     ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,3,16,0,0,0,0,wp[0],wp[1],ALT,1))
@@ -507,7 +507,7 @@ def write_mission_file(first_pass_waypoints, next_pass_waypoints):
                     item_count+=1
 
             # Open payload doors
-            ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,0,183,9,1100,0,0,0,0,0,1))
+            ofile.write('%d\t%d\t%d\t%d\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%d\n' % (item_count,0,0,183,5,1100,0,0,0,0,0,1))
             item_count+=1
 
 def write_mission_file(fname, first_pass_waypoints, next_pass_waypoints):
