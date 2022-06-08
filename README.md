@@ -6,16 +6,4 @@ John Steinman - Communications Lead
 Nischal Shrestha - Technical Lead  
 Bradley Smith - Technical  
 Kenneth Meyer - Technical
-
-# Files
-
-## CARP
-
-
-## Dubins
-
-
-##
-
-
-##
+ - Technical
